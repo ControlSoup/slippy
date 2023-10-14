@@ -1,6 +1,9 @@
-use ndarray::Array2;
-
+mod RunTime;
+mod Physics;
 
 fn main() {
-    // Sim Loop
+    // Intializatoin
+
+    let testcube = Physics::TestCube::default();
+
 }
