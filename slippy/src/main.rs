@@ -1,9 +1,7 @@
-mod RunTime;
-mod Physics;
+mod physics;
+mod gnc;
+mod sim;
 
 fn main() {
-    // Intializatoin
-
-    let testcube = Physics::TestCube::default();
 
 }
