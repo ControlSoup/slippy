@@ -1,1 +1,1 @@
-pub mod strapdown_os;
+pub mod strapdown;

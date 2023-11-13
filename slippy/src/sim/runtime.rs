@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::path::Path;
 use csv;
 
-
 #[allow(dead_code)]
 
 #[derive(Debug)]
@@ -23,9 +22,16 @@ impl BasicRunTime{
 
         // Intialize the array for which we will step through
         let x_key = x_key.to_string();
-        let x_array: Vec<f64> = Vec::range(
-            0.0, max_x_value, x_increment
-        );
+        let mut x_array: Vec<f64> = Vec::new();
+
+        let mut current = 0.0;
+        while current < max_x_value{
+           current += x_increment;
+           x_array.push(current);
+        }
+
+        // Remove mutability from the x_array
+        let x_array = x_array;
 
         // Init Hashmap for Data Storage
         let data_dict: HashMap<String, Vec<f64>> = HashMap::new();
@@ -51,6 +57,7 @@ impl BasicRunTime{
                 key.to_string(),
                 vec![0.0; self.x_array.len()]
             );
+            self.value_set(key, value);
         }
 
         else{
@@ -84,6 +91,15 @@ impl BasicRunTime{
             }
         }
 
+    }
+
+    pub fn value_set(&mut self, key: &str, value: f64){
+        // Read the current value
+        if let Some(array) = self.data_dict.get_mut(key){
+            array[self.current_index] = value;
+        } else{
+            panic!("    ERROR| Get Value Key [{}] not in data_dict", key)
+        }
     }
 
     pub fn get_value(&self, key: &str) -> f64{
@@ -214,7 +230,7 @@ mod tests {
                 runtime.get_value(dynamic_key) - 1.0
             );
         }
-        runtime.export_to_csv("test", "")
+        // runtime.export_to_csv("test", "")
 
     }
 }
