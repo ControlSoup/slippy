@@ -46,13 +46,14 @@ pub fn euler_rad_to_quat(
 pub fn quat_to_euler_rad(
     quat: Vector4<f64>
 )-> Vector3<f64>{
-/** q1 can be non-normalised quaternion */
+
+    // q1 can be non-normalised quaternion
     let mut euler = Vector3::zeros();
     let  sqw = quat[0] * quat[0];
     let  sqx = quat[1] * quat[1];
     let  sqy = quat[2] * quat[2];
     let  sqz = quat[3] * quat[3];
-	let  unit = sqx + sqy + sqz + sqw; // if normalised is one, otherwise is correction factor
+	let  unit = sqx + sqy + sqz + sqw;
 	let  test = quat[1] * quat[2] + quat[3] * quat[0];
 
 	if test > 0.499 * unit { // singularity at north pole
@@ -188,5 +189,19 @@ mod tests {
             quat_to_euler_rad(quat),
             max_relative=1.0e-6
         );
+    }
+
+    #[test]
+    fn tranformations(){
+        let vec = Vector3::from_row_slice(&[1.0, 1.0, 1.0]);
+        let quat = Vector4::from_row_slice(&[1.0, 0.0, 0.0, 0.0]);
+        let transform =  quat_transformation(&quat, &vec);
+
+        assert_relative_eq!(
+            vec,
+            transform,
+            max_relative=1e-6
+        )
+
     }
 }

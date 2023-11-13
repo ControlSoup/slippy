@@ -265,7 +265,7 @@ mod tests {
 
     #[allow(unused)]
     #[test]
-    fn test_zeros(){
+    fn zeros(){
         let inputs = Inputs::zeros();
         let state = State::zeros();
         let mass_props = MassProperties::zeros();
@@ -273,7 +273,7 @@ mod tests {
 
     #[allow(unused)]
     #[test]
-    fn test_new(){
+    fn new(){
         let inputs = Inputs::new(
             &[1.0, 1.0, 1.1],
             &[1.0, 1.0, 1.1],
@@ -307,12 +307,14 @@ mod tests {
 
     #[allow(unused)]
     #[test]
-    fn test_translation(){
+    fn pure_translation(){
         let mut object = TestObject::zeros();
 
         // Set Forces
-        object.state.pos_m = Vector3::from_row_slice(&[0.0, 1.0, 2.0]);
-        object.inputs.local_level_force_n = Vector3::from_row_slice(&[1.0, 1.0, 1.0]);
+        object.state.pos_m =
+            Vector3::from_row_slice(&[0.0, 1.0, 2.0]);
+        object.inputs.local_level_force_n =
+            Vector3::from_row_slice(&[1.0, 1.0, 1.0]);
 
         let dt = 0.001;
         let max_int = (5.0 / dt) as i64;
@@ -339,7 +341,7 @@ mod tests {
     }
 
     #[test]
-    fn test_pure_rotation(){
+    fn pure_rotation(){
         let mut object = TestObject::zeros();
 
         object.state.quat = strapdown::euler_rad_to_quat(
@@ -356,7 +358,51 @@ mod tests {
         let max_int = (5.0 / dt) as i64;
 
         for _ in 0..max_int{
-            println!("\n{}\n", strapdown::quat_to_euler_rad(object.state.quat));
+            object.update(dt);
+        }
+
+        // w  = w_0 + alpha*t
+        assert_relative_eq!(
+            object.state.ang_vel_radps,
+            Vector3::from_row_slice(&[
+                0.5,
+                0.0,
+                0.0
+
+            ]),
+            max_relative=1e-6
+        );
+
+        // theta = w_0 * t + alpht * t^2 / 2
+        assert_relative_eq!(
+            strapdown::quat_to_euler_rad(object.state.quat),
+            Vector3::from_row_slice(&[
+                1.25,
+                0.0,
+                0.0
+            ]),
+            max_relative=1e-6
+        )
+    }
+
+    #[test]
+    fn body_rotation(){
+        let mut object = TestObject::zeros();
+
+        object.state.quat = strapdown::euler_rad_to_quat(
+            Vector3::from_row_slice(&[
+                0.0,
+                0.1,
+                0.2
+            ])
+        );
+
+        object.inputs.body_moment_nm = Vector3::from_row_slice(&[0.1,0.0,0.0]);
+
+        let dt = 0.25;
+        let max_int = (5.0 / dt) as i64;
+
+        for _ in 0..max_int{
             object.update(dt);
         }
 

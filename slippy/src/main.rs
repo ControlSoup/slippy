@@ -4,5 +4,5 @@ mod sim;
 mod units;
 
 fn main() {
-
+    println!("Hello, world!");
 }
