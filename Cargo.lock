@@ -248,6 +248,7 @@ dependencies = [
 name = "slippy"
 version = "0.1.0"
 dependencies = [
+ "approx",
  "csv",
  "derive_more",
  "nalgebra",
