@@ -4,7 +4,7 @@ use std::ops::{Mul, Div};
 
 // 3d Party
 use nalgebra as na;
-use na::{Vector3, Vector4, Matrix3};
+use na::{Vector3, Quaternion, Matrix3};
 use derive_more::Add;
 
 // Local
@@ -20,7 +20,7 @@ pub struct State{
     pub pos_m: Vector3<f64>,
     pub vel_mps: Vector3<f64>,
     pub accel_mps2: Vector3<f64>,
-    pub quat: Vector4<f64>,
+    pub quat: Quaternion<f64>,
     pub ang_vel_radps: Vector3<f64>,
     pub ang_accel_radps2: Vector3<f64>,
 }
@@ -38,7 +38,7 @@ impl State{
             pos_m: Vector3::from_row_slice(pos_m),
             vel_mps: Vector3::from_row_slice(vel_mps),
             accel_mps2: Vector3::from_row_slice(accel_mps2),
-            quat: Vector4::from_row_slice(quat),
+            quat: Quaternion::new(quat[0], quat[1], quat[2], quat[3]),
             ang_vel_radps: Vector3::from_row_slice(ang_vel_radps),
             ang_accel_radps2: Vector3::from_row_slice(ang_accel_radps2),
         }
@@ -49,8 +49,8 @@ impl State{
             pos_m: Vector3::zeros(),
             vel_mps: Vector3::zeros(),
             accel_mps2: Vector3::zeros(),
-            quat: Vector4::from_row_slice(
-                &[1.0, 0.0, 0.0, 0.0]
+            quat: Quaternion::new(
+                1.0, 0.0, 0.0, 0.0
             ),
             ang_vel_radps: Vector3::zeros(),
             ang_accel_radps2: Vector3::zeros(),
