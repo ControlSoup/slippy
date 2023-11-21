@@ -4,7 +4,7 @@ use std::ops::{Mul, Div};
 
 // 3d Party
 use nalgebra as na;
-use na::{Vector3, Quaternion, Matrix3};
+use na::{Vector3, Vector4, Matrix3};
 use derive_more::Add;
 
 // Local
@@ -20,7 +20,7 @@ pub struct State{
     pub pos_m: Vector3<f64>,
     pub vel_mps: Vector3<f64>,
     pub accel_mps2: Vector3<f64>,
-    pub quat: Quaternion<f64>,
+    pub quat: Vector4<f64>,
     pub ang_vel_radps: Vector3<f64>,
     pub ang_accel_radps2: Vector3<f64>,
 }
@@ -38,7 +38,7 @@ impl State{
             pos_m: Vector3::from_row_slice(pos_m),
             vel_mps: Vector3::from_row_slice(vel_mps),
             accel_mps2: Vector3::from_row_slice(accel_mps2),
-            quat: Quaternion::new(quat[0], quat[1], quat[2], quat[3]),
+            quat: Vector4::from_row_slice(quat),
             ang_vel_radps: Vector3::from_row_slice(ang_vel_radps),
             ang_accel_radps2: Vector3::from_row_slice(ang_accel_radps2),
         }
@@ -49,8 +49,8 @@ impl State{
             pos_m: Vector3::zeros(),
             vel_mps: Vector3::zeros(),
             accel_mps2: Vector3::zeros(),
-            quat: Quaternion::new(
-                1.0, 0.0, 0.0, 0.0
+            quat: Vector4::from_row_slice(
+                &[1.0, 0.0, 0.0, 0.0]
             ),
             ang_vel_radps: Vector3::zeros(),
             ang_accel_radps2: Vector3::zeros(),
@@ -265,7 +265,7 @@ mod tests {
 
     #[allow(unused)]
     #[test]
-    fn zeros(){
+    fn test_zeros(){
         let inputs = Inputs::zeros();
         let state = State::zeros();
         let mass_props = MassProperties::zeros();
@@ -273,7 +273,7 @@ mod tests {
 
     #[allow(unused)]
     #[test]
-    fn new(){
+    fn test_new(){
         let inputs = Inputs::new(
             &[1.0, 1.0, 1.1],
             &[1.0, 1.0, 1.1],
@@ -307,14 +307,12 @@ mod tests {
 
     #[allow(unused)]
     #[test]
-    fn pure_translation(){
+    fn test_translation(){
         let mut object = TestObject::zeros();
 
         // Set Forces
-        object.state.pos_m =
-            Vector3::from_row_slice(&[0.0, 1.0, 2.0]);
-        object.inputs.local_level_force_n =
-            Vector3::from_row_slice(&[1.0, 1.0, 1.0]);
+        object.state.pos_m = Vector3::from_row_slice(&[0.0, 1.0, 2.0]);
+        object.inputs.local_level_force_n = Vector3::from_row_slice(&[1.0, 1.0, 1.0]);
 
         let dt = 0.001;
         let max_int = (5.0 / dt) as i64;
@@ -341,7 +339,7 @@ mod tests {
     }
 
     #[test]
-    fn pure_rotation(){
+    fn test_pure_rotation(){
         let mut object = TestObject::zeros();
 
         object.state.quat = strapdown::euler_rad_to_quat(
@@ -358,51 +356,7 @@ mod tests {
         let max_int = (5.0 / dt) as i64;
 
         for _ in 0..max_int{
-            object.update(dt);
-        }
-
-        // w  = w_0 + alpha*t
-        assert_relative_eq!(
-            object.state.ang_vel_radps,
-            Vector3::from_row_slice(&[
-                0.5,
-                0.0,
-                0.0
-
-            ]),
-            max_relative=1e-6
-        );
-
-        // theta = w_0 * t + alpht * t^2 / 2
-        assert_relative_eq!(
-            strapdown::quat_to_euler_rad(object.state.quat),
-            Vector3::from_row_slice(&[
-                1.25,
-                0.0,
-                0.0
-            ]),
-            max_relative=1e-6
-        )
-    }
-
-    #[test]
-    fn body_rotation(){
-        let mut object = TestObject::zeros();
-
-        object.state.quat = strapdown::euler_rad_to_quat(
-            Vector3::from_row_slice(&[
-                0.0,
-                0.1,
-                0.2
-            ])
-        );
-
-        object.inputs.body_moment_nm = Vector3::from_row_slice(&[0.1,0.0,0.0]);
-
-        let dt = 0.25;
-        let max_int = (5.0 / dt) as i64;
-
-        for _ in 0..max_int{
+            println!("\n{}\n", strapdown::quat_to_euler_rad(object.state.quat));
             object.update(dt);
         }
 

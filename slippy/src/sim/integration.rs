@@ -48,14 +48,25 @@ pub trait Integrate{
 mod tests {
 
     use super::*;
-    use derive_more::Add;
     use approx::assert_relative_eq;
-    #[derive(Add, Debug,Clone)]
+    #[derive(Debug,Clone)]
 
     struct Location{
         position: f64,
         velocity: f64,
         acceleration: f64
+    }
+
+    impl Add<f64> for Location{
+        type Output = Location;
+        fn add(self, rhs: f64) -> Location {
+            Location {
+                position: self.position + rhs,
+                velocity: self.velocity + rhs,
+                acceleration: self.acceleration + rhs,
+            }
+        }
+
     }
 
     impl Mul<f64> for Location {

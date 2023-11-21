@@ -1,8 +1,5 @@
-mod physics;
-mod gnc;
-mod sim;
-mod units;
+mod strapdown;
 
 fn main() {
-    println!("Hello, world!");
+
 }
