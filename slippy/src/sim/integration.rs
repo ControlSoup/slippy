@@ -49,48 +49,22 @@ mod tests {
 
     use super::*;
     use approx::assert_relative_eq;
-    #[derive(Debug,Clone)]
+    #[derive(
+        Debug,
+        Clone,
+        Copy,
+        PartialEq,
+        derive_more::Add,
+        derive_more::Sub,
+        derive_more::Mul,
+        derive_more::Div,
+        derive_more::Neg
+    )]
 
     struct Location{
         position: f64,
         velocity: f64,
         acceleration: f64
-    }
-
-    impl Add<f64> for Location{
-        type Output = Location;
-        fn add(self, rhs: f64) -> Location {
-            Location {
-                position: self.position + rhs,
-                velocity: self.velocity + rhs,
-                acceleration: self.acceleration + rhs,
-            }
-        }
-
-    }
-
-    impl Mul<f64> for Location {
-        type Output = Location;
-
-        fn mul(self, rhs: f64) -> Location {
-            Location {
-                position: self.position * rhs,
-                velocity: self.velocity * rhs,
-                acceleration: self.acceleration * rhs,
-            }
-        }
-    }
-
-    impl Div<f64> for Location{
-        type Output = Location;
-
-        fn div(self, rhs: f64) -> Location{
-            return Location{
-                position: self.position / rhs,
-                velocity: self.velocity / rhs,
-                acceleration: self.acceleration / rhs,
-            }
-        }
     }
 
     impl Integrate for Location{

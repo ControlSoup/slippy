@@ -3,85 +3,65 @@
 use std::ops::{Mul, Div};
 
 // 3d Party
-use nalgebra as na;
-use na::{Vector3, Vector4, Matrix3};
-use derive_more::Add;
 
 // Local
-use crate::gnc::strapdown;
+use crate::strapdown::vector::Vector;
+use crate::strapdown::quaternion::Quaternion;
 use crate::sim::integration::Integrate;
 
 // ----------------------------------------------------------------------------
 // State
 // ----------------------------------------------------------------------------
 
-#[derive(Debug, Add, Clone)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    derive_more::Add,
+    derive_more::AddAssign,
+    derive_more::Sub,
+    derive_more::SubAssign,
+    derive_more::Mul,
+    derive_more::Div,
+    derive_more::Neg
+)]
 pub struct State{
-    pub pos_m: Vector3<f64>,
-    pub vel_mps: Vector3<f64>,
-    pub accel_mps2: Vector3<f64>,
-    pub quat: Vector4<f64>,
-    pub ang_vel_radps: Vector3<f64>,
-    pub ang_accel_radps2: Vector3<f64>,
+    pub pos_m: Vector,
+    pub vel_mps: Vector,
+    pub accel_mps2: Vector,
+    pub quat: Quaternion,
+    pub ang_vel_radps: Vector,
+    pub ang_accel_radps2: Vector,
 }
 
 impl State{
     pub fn new(
-        pos_m: &[f64; 3],
-        vel_mps: &[f64; 3],
-        accel_mps2: &[f64; 3],
-        quat: &[f64; 4],
-        ang_vel_radps: &[f64; 3],
-        ang_accel_radps2: &[f64; 3],
+        pos_m: [f64; 3],
+        vel_mps: [f64; 3],
+        accel_mps2: [f64; 3],
+        quat: [f64; 4],
+        ang_vel_radps: [f64; 3],
+        ang_accel_radps2: [f64; 3],
     ) -> State{
         return State {
-            pos_m: Vector3::from_row_slice(pos_m),
-            vel_mps: Vector3::from_row_slice(vel_mps),
-            accel_mps2: Vector3::from_row_slice(accel_mps2),
-            quat: Vector4::from_row_slice(quat),
-            ang_vel_radps: Vector3::from_row_slice(ang_vel_radps),
-            ang_accel_radps2: Vector3::from_row_slice(ang_accel_radps2),
+            pos_m: Vector::from_array(pos_m),
+            vel_mps: Vector::from_array(vel_mps),
+            accel_mps2: Vector::from_array(accel_mps2),
+            quat: Quaternion::from_array(quat),
+            ang_vel_radps: Vector::from_array(ang_vel_radps),
+            ang_accel_radps2: Vector::from_array(ang_accel_radps2),
         }
     }
 
-    pub fn zeros() -> State{
+    pub fn init() -> State{
         return State {
-            pos_m: Vector3::zeros(),
-            vel_mps: Vector3::zeros(),
-            accel_mps2: Vector3::zeros(),
-            quat: Vector4::from_row_slice(
-                &[1.0, 0.0, 0.0, 0.0]
-            ),
-            ang_vel_radps: Vector3::zeros(),
-            ang_accel_radps2: Vector3::zeros(),
-        }
-    }
-}
-
-impl Mul<f64> for State{
-    type Output = State;
-    fn mul(self, rhs: f64) -> State{
-        return State {
-            pos_m: self.pos_m * rhs,
-            vel_mps: self.vel_mps * rhs,
-            accel_mps2: self.accel_mps2 * rhs,
-            quat: self.quat * rhs,
-            ang_vel_radps: self.ang_vel_radps * rhs,
-            ang_accel_radps2: self.ang_accel_radps2 * rhs
-        }
-    }
-}
-
-impl Div<f64> for State{
-    type Output = State;
-    fn div(self, rhs: f64) -> State{
-        return State {
-            pos_m: self.pos_m / rhs,
-            vel_mps: self.vel_mps / rhs,
-            accel_mps2: self.accel_mps2 * rhs,
-            quat: self.quat / rhs,
-            ang_vel_radps: self.ang_vel_radps / rhs,
-            ang_accel_radps2: self.ang_accel_radps2 / rhs
+            pos_m: Vector::zeros(),
+            vel_mps: Vector::zeros(),
+            accel_mps2: Vector::zeros(),
+            quat: Quaternion::identity(),
+            ang_vel_radps: Vector::zeros(),
+            ang_accel_radps2: Vector::zeros(),
         }
     }
 }
@@ -89,18 +69,11 @@ impl Div<f64> for State{
 impl Integrate for State{
     fn get_derivative(&self)-> Self {
         // The State object is in the body frame
-        let mut d = State::zeros();
+        let mut d = State::init();
 
         d.pos_m = self.vel_mps.clone();
-
         d.vel_mps = self.accel_mps2.clone();
-
-        // Quat update
-        d.quat = strapdown::quat_rate(
-            &self.quat,
-            &self.ang_vel_radps
-        );
-
+        d.quat = self.quat.rate(self.ang_vel_radps);
         d.ang_vel_radps = self.ang_accel_radps2.clone();
 
         return d
@@ -113,39 +86,39 @@ impl Integrate for State{
 
 #[derive(Debug)]
 pub struct Inputs{
-    pub local_level_force_n: Vector3<f64>,
-    pub local_level_moment_nm: Vector3<f64>,
-    pub body_force_n: Vector3<f64>,
-    pub body_moment_nm: Vector3<f64>
+    pub local_level_force_n: Vector,
+    pub local_level_moment_nm: Vector,
+    pub body_force_n: Vector,
+    pub body_moment_nm: Vector
 }
 
 
 // TODO: Update Forces to act in the body frame
 impl Inputs{
     pub fn new(
-        local_level_force_n: &[f64; 3],
-        local_level_moment_nm: &[f64; 3],
-        body_force_n: &[f64; 3],
-        body_moment_nm: &[f64; 3],
+        local_level_force_n: [f64; 3],
+        local_level_moment_nm: [f64; 3],
+        body_force_n: [f64; 3],
+        body_moment_nm: [f64; 3],
     ) -> Inputs {
             return Inputs{
                 local_level_force_n:
-                    Vector3::from_row_slice(local_level_force_n),
+                    Vector::from_array(local_level_force_n),
                 local_level_moment_nm:
-                    Vector3::from_row_slice(local_level_moment_nm),
+                    Vector::from_array(local_level_moment_nm),
                 body_force_n:
-                    Vector3::from_row_slice(body_force_n),
+                    Vector::from_array(body_force_n),
                 body_moment_nm:
-                    Vector3::from_row_slice(body_moment_nm),
+                    Vector::from_array(body_moment_nm),
             }
     }
 
     pub fn zeros() -> Inputs{
         return Inputs{
-            local_level_force_n: Vector3::zeros(),
-            body_force_n: Vector3::zeros(),
-            local_level_moment_nm: Vector3::zeros(),
-            body_moment_nm: Vector3::zeros()
+            local_level_force_n: Vector::zeros(),
+            body_force_n: Vector::zeros(),
+            local_level_moment_nm: Vector::zeros(),
+            body_moment_nm: Vector::zeros()
 
         }
     }
@@ -157,29 +130,26 @@ impl Inputs{
         // Notes:
         //     Forces and moments act about the body frame
 
-        let total_forces_n = &self.local_level_force_n + strapdown::quat_transformation(
-            &state.quat,
-            &self.body_force_n
-        );
+        let total_forces_n = 
+            self.local_level_force_n + 
+            state.quat.transform(self.body_force_n);
 
-        let total_moments_nm =  &self.local_level_moment_nm + strapdown::quat_transformation(
-            &state.quat,
-            &self.body_moment_nm
-        );
+        let total_moments_nm =  
+            self.local_level_moment_nm + 
+            state.quat.transform(self.body_moment_nm);
 
         // F = ma
         state.accel_mps2 = total_forces_n / mass_props.mass_cg_kg;
 
         // I * w
-        let i_dot_w: Vector3<f64> =
+        let i_dot_w =
             mass_props.i_tensor_cg_kgpm2 * state.ang_vel_radps;
 
         // w x (I * w)
-        let w_cross_i_dot_w: Vector3<f64> = state.ang_vel_radps.cross(&i_dot_w);
+        let w_cross_i_dot_w = state.ang_vel_radps.cross(&i_dot_w);
 
         // M - (w x (I * w))
-        let m_minus_w_cross_i_dot_w: Vector3<f64> =
-            total_moments_nm - w_cross_i_dot_w;
+        let m_minus_w_cross_i_dot_w = total_moments_nm - w_cross_i_dot_w;
 
         // alpha = I^-1(M-(w × (I * w))
         state.ang_accel_radps2 =
@@ -239,9 +209,6 @@ impl MassProperties{
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{units::deg_to_rad, gnc::strapdown::euler_rad_to_quat};
-    use approx::assert_relative_eq;
-
     struct TestObject{
         state: State,
         inputs: Inputs,
@@ -251,7 +218,7 @@ mod tests {
     impl TestObject{
         fn zeros()->TestObject{
             return TestObject {
-                state: State::zeros(),
+                state: State::init(),
                 inputs: Inputs::zeros(),
                 mass_props: MassProperties::zeros()
             }
@@ -267,7 +234,7 @@ mod tests {
     #[test]
     fn test_zeros(){
         let inputs = Inputs::zeros();
-        let state = State::zeros();
+        let state = State::init();
         let mass_props = MassProperties::zeros();
     }
 

@@ -1,3 +1,3 @@
-pub mod dcm;
-pub mod euler;
 pub mod vector;
+pub mod quaternion;
+pub mod matrix;
