@@ -4,8 +4,9 @@ use std::ops::{Mul, Div};
 
 // 3d Party
 
+use crate::strapdown::matrix::Matrix3x3;
 // Local
-use crate::strapdown::vector::Vector;
+use crate::strapdown::vector::Vector3;
 use crate::strapdown::quaternion::Quaternion;
 use crate::sim::integration::Integrate;
 
@@ -27,12 +28,12 @@ use crate::sim::integration::Integrate;
     derive_more::Neg
 )]
 pub struct State{
-    pub pos_m: Vector,
-    pub vel_mps: Vector,
-    pub accel_mps2: Vector,
+    pub pos_m: Vector3,
+    pub vel_mps: Vector3,
+    pub accel_mps2: Vector3,
     pub quat: Quaternion,
-    pub ang_vel_radps: Vector,
-    pub ang_accel_radps2: Vector,
+    pub ang_vel_radps: Vector3,
+    pub ang_accel_radps2: Vector3,
 }
 
 impl State{
@@ -45,23 +46,23 @@ impl State{
         ang_accel_radps2: [f64; 3],
     ) -> State{
         return State {
-            pos_m: Vector::from_array(pos_m),
-            vel_mps: Vector::from_array(vel_mps),
-            accel_mps2: Vector::from_array(accel_mps2),
+            pos_m: Vector3::from_array(pos_m),
+            vel_mps: Vector3::from_array(vel_mps),
+            accel_mps2: Vector3::from_array(accel_mps2),
             quat: Quaternion::from_array(quat),
-            ang_vel_radps: Vector::from_array(ang_vel_radps),
-            ang_accel_radps2: Vector::from_array(ang_accel_radps2),
+            ang_vel_radps: Vector3::from_array(ang_vel_radps),
+            ang_accel_radps2: Vector3::from_array(ang_accel_radps2),
         }
     }
 
     pub fn init() -> State{
         return State {
-            pos_m: Vector::zeros(),
-            vel_mps: Vector::zeros(),
-            accel_mps2: Vector::zeros(),
+            pos_m: Vector3::zeros(),
+            vel_mps: Vector3::zeros(),
+            accel_mps2: Vector3::zeros(),
             quat: Quaternion::identity(),
-            ang_vel_radps: Vector::zeros(),
-            ang_accel_radps2: Vector::zeros(),
+            ang_vel_radps: Vector3::zeros(),
+            ang_accel_radps2: Vector3::zeros(),
         }
     }
 }
@@ -73,7 +74,7 @@ impl Integrate for State{
 
         d.pos_m = self.vel_mps.clone();
         d.vel_mps = self.accel_mps2.clone();
-        d.quat = self.quat.rate(self.ang_vel_radps);
+        d.quat = self.quat.derivative(self.ang_vel_radps);
         d.ang_vel_radps = self.ang_accel_radps2.clone();
 
         return d
@@ -86,10 +87,10 @@ impl Integrate for State{
 
 #[derive(Debug)]
 pub struct Inputs{
-    pub local_level_force_n: Vector,
-    pub local_level_moment_nm: Vector,
-    pub body_force_n: Vector,
-    pub body_moment_nm: Vector
+    pub local_level_force_n: Vector3,
+    pub local_level_moment_nm: Vector3,
+    pub body_force_n: Vector3,
+    pub body_moment_nm: Vector3
 }
 
 
@@ -103,22 +104,22 @@ impl Inputs{
     ) -> Inputs {
             return Inputs{
                 local_level_force_n:
-                    Vector::from_array(local_level_force_n),
+                    Vector3::from_array(local_level_force_n),
                 local_level_moment_nm:
-                    Vector::from_array(local_level_moment_nm),
+                    Vector3::from_array(local_level_moment_nm),
                 body_force_n:
-                    Vector::from_array(body_force_n),
+                    Vector3::from_array(body_force_n),
                 body_moment_nm:
-                    Vector::from_array(body_moment_nm),
+                    Vector3::from_array(body_moment_nm),
             }
     }
 
     pub fn zeros() -> Inputs{
         return Inputs{
-            local_level_force_n: Vector::zeros(),
-            body_force_n: Vector::zeros(),
-            local_level_moment_nm: Vector::zeros(),
-            body_moment_nm: Vector::zeros()
+            local_level_force_n: Vector3::zeros(),
+            body_force_n: Vector3::zeros(),
+            local_level_moment_nm: Vector3::zeros(),
+            body_moment_nm: Vector3::zeros()
 
         }
     }
@@ -146,7 +147,7 @@ impl Inputs{
             mass_props.i_tensor_cg_kgpm2 * state.ang_vel_radps;
 
         // w x (I * w)
-        let w_cross_i_dot_w = state.ang_vel_radps.cross(&i_dot_w);
+        let w_cross_i_dot_w = state.ang_vel_radps.cross(i_dot_w);
 
         // M - (w x (I * w))
         let m_minus_w_cross_i_dot_w = total_moments_nm - w_cross_i_dot_w;
@@ -166,24 +167,19 @@ impl Inputs{
 #[derive(Debug)]
 pub struct MassProperties{
     pub mass_cg_kg: f64,
-    pub i_tensor_cg_kgpm2: Matrix3<f64>,
-    pub inv_i_tensor_cg_kgpm2: Matrix3<f64>
+    pub i_tensor_cg_kgpm2: Matrix3x3,
+    pub inv_i_tensor_cg_kgpm2: Matrix3x3
 }
 
 impl MassProperties{
     pub fn new(
         mass_cg_kg: f64,
-        i_tensor_cg_kgpm2: &[[f64; 3]; 3]
+        i_tensor_cg_kgpm2: [f64; 9]
     ) -> MassProperties{
 
-        let i_tensor: Matrix3<f64> = Matrix3::from_row_slice(&[
-            i_tensor_cg_kgpm2[0][0],i_tensor_cg_kgpm2[0][1],i_tensor_cg_kgpm2[0][2],
-            i_tensor_cg_kgpm2[1][0],i_tensor_cg_kgpm2[1][1],i_tensor_cg_kgpm2[1][2],
-            i_tensor_cg_kgpm2[2][0],i_tensor_cg_kgpm2[2][1],i_tensor_cg_kgpm2[2][2]
-        ]);
+        let i_tensor: Matrix3x3 = Matrix3x3::from_array(i_tensor_cg_kgpm2);
 
-        let inv: Matrix3<f64> = i_tensor
-            .try_inverse()
+        let inv: Matrix3x3 = i_tensor.inv()
             .expect("i_tensor_cg_kgpm2 was not invertible");
 
         return MassProperties {
@@ -196,8 +192,8 @@ impl MassProperties{
     pub fn zeros() -> MassProperties{
         return MassProperties {
             mass_cg_kg: 1.0,
-            i_tensor_cg_kgpm2: Matrix3::identity(),
-            inv_i_tensor_cg_kgpm2:Matrix3::identity()
+            i_tensor_cg_kgpm2: Matrix3x3::identity(),
+            inv_i_tensor_cg_kgpm2:Matrix3x3::identity()
         }
     }
 }
@@ -208,6 +204,8 @@ impl MassProperties{
 
 #[cfg(test)]
 mod tests {
+    use crate::test::almost_equal_array;
+
     use super::*;
     struct TestObject{
         state: State,
@@ -242,26 +240,26 @@ mod tests {
     #[test]
     fn test_new(){
         let inputs = Inputs::new(
-            &[1.0, 1.0, 1.1],
-            &[1.0, 1.0, 1.1],
-            &[1.0, 1.0, 1.1],
-            &[1.0, 1.0, 1.1],
+            [1.0, 1.0, 1.1],
+            [1.0, 1.0, 1.1],
+            [1.0, 1.0, 1.1],
+            [1.0, 1.0, 1.1],
         );
         let state = State::new(
-            &[1.0, 1.0, 1.0],
-            &[1.0, 1.0, 1.0],
-            &[1.0, 1.0, 1.0],
-            &[1.0, 0.0, 0.0, 0.0],
-            &[1.0, 1.0, 1.0],
-            &[1.0, 1.0, 1.0]
+            [1.0, 1.0, 1.0],
+            [1.0, 1.0, 1.0],
+            [1.0, 1.0, 1.0],
+            [1.0, 0.0, 0.0, 0.0],
+            [1.0, 1.0, 1.0],
+            [1.0, 1.0, 1.0]
         );
 
         let mass_props = MassProperties::new(
             10.0,
-            &[
-                [1.0, 0.0, 0.0],
-                [0.0, 1.0, 0.0],
-                [0.0, 0.0, 1.0]
+            [
+                1.0, 0.0, 0.0,
+                0.0, 1.0, 0.0,
+                0.0, 0.0, 1.0
             ],
 
         );
@@ -278,30 +276,27 @@ mod tests {
         let mut object = TestObject::zeros();
 
         // Set Forces
-        object.state.pos_m = Vector3::from_row_slice(&[0.0, 1.0, 2.0]);
-        object.inputs.local_level_force_n = Vector3::from_row_slice(&[1.0, 1.0, 1.0]);
+        object.state.pos_m = Vector3::new(0.0, 1.0, 2.0);
+        object.inputs.local_level_force_n = Vector3::new(1.0, 1.0, 1.0);
 
-        let dt = 0.001;
+        let dt = 1e-4;
         let max_int = (5.0 / dt) as i64;
 
         let mut time = 0.0;
         for i in 0..max_int{
-
             object.update(dt);
         }
 
         // vf = vi + (f/m)t = [5.0, 5.0, 5.0]
-        assert_relative_eq!(
-            object.state.vel_mps,
-            Vector3::from_row_slice(&[5.0, 5.0, 5.0]),
-            max_relative = 1.0e-6
+        almost_equal_array(
+            &object.state.vel_mps.to_array(),
+            &[5.0, 5.0, 5.0]
         );
 
         // x = vi * t + a * t^2 /2  = [12.5, 13.5, 14.5]
-        assert_relative_eq!(
-            object.state.pos_m,
-            Vector3::from_row_slice(&[12.5, 13.5, 14.5]),
-            max_relative = 1.0e-6
+        almost_equal_array(
+            &object.state.pos_m.to_array(),
+            &[12.5, 13.5, 14.5]
         );
     }
 
@@ -309,45 +304,27 @@ mod tests {
     fn test_pure_rotation(){
         let mut object = TestObject::zeros();
 
-        object.state.quat = strapdown::euler_rad_to_quat(
-            Vector3::from_row_slice(&[
-                0.0,
-                0.0,
-                0.0
-            ])
-        );
+        object.state.quat = Quaternion::identity();
 
-        object.inputs.local_level_moment_nm = Vector3::from_row_slice(&[0.1,0.0,0.0]);
+        object.inputs.local_level_moment_nm = Vector3::new(0.1, 0.0, 0.0);
 
         let dt = 0.25;
         let max_int = (5.0 / dt) as i64;
 
         for _ in 0..max_int{
-            println!("\n{}\n", strapdown::quat_to_euler_rad(object.state.quat));
             object.update(dt);
         }
 
         // w  = w_0 + alpha*t
-        assert_relative_eq!(
-            object.state.ang_vel_radps,
-            Vector3::from_row_slice(&[
-                0.5,
-                0.0,
-                0.0
-
-            ]),
-            max_relative=1e-6
+        almost_equal_array(
+            &object.state.ang_vel_radps.to_array(),
+            &[0.5, 0.0, 0.0]
         );
 
         // theta = w_0 * t + alpht * t^2 / 2
-        assert_relative_eq!(
-            strapdown::quat_to_euler_rad(object.state.quat),
-            Vector3::from_row_slice(&[
-                1.25,
-                0.0,
-                0.0
-            ]),
-            max_relative=1e-6
+        almost_equal_array(
+            &object.state.quat.to_euler().to_array(),
+            &[1.25, 0.0, 0.0],
         )
     }
 }

@@ -25,6 +25,7 @@ use crate::strapdown::vector::Vector3;
     derive_more::Sub,
     derive_more::SubAssign,
     derive_more::Mul,
+    derive_more::Div,
     derive_more::Neg
 )]
 // Eq 3.2.1-1, Pg 3-15
@@ -85,6 +86,37 @@ impl Matrix3x3{
             self.c21.powf(2.0) + self.c22.powf(2.0) + self.c23.powf(2.0) + 
             self.c31.powf(2.0) + self.c32.powf(2.0) + self.c33.powf(2.0) 
         ).sqrt()
+    }
+
+    pub fn det(self) -> f64{
+        return
+            (self.c11 * (self.c22 * self.c33 - self.c23 * self.c32)) - 
+            (self.c12 * (self.c31 * self.c33 - self.c23 * self.c31)) + 
+            (self.c13 * (self.c31 * self.c32 - self.c22 * self.c31))
+        
+    }
+
+    pub fn adjugate(self) -> Matrix3x3{
+        // Source:
+        //    https://en.wikipedia.org/wiki/Adjugate_matrix
+        return Matrix3x3::new(
+            (self.c22 * self.c33) - (self.c32 * self.c23),
+            -((self.c12 * self.c33) - (self.c32 * self.c13)),
+            (self.c12 * self.c23) - (self.c22 * self.c13),
+            -((self.c21 * self.c33) - (self.c31 * self.c23)),
+            (self.c11 * self.c33) - (self.c31 * self.c13),
+            -((self.c11 * self.c23) - (self.c21 * self.c13)),
+            (self.c21 * self.c32) - (self.c31 * self.c22),
+            -((self.c11 * self.c32) - (self.c31 * self.c12)),
+            (self.c11 * self.c22) - (self.c21 * self.c12)
+        )
+    }
+
+    pub fn inv(self) -> Option<Matrix3x3>{
+        if self.det() == 0.0{
+            return None
+        };
+        return Some(self.adjugate() / self.det())
     }
 
     pub fn to_array(self) -> [f64; 9]{
@@ -186,6 +218,26 @@ impl Mul<Vector3> for Matrix3x3{
 mod tests {
     use super::*;
     use crate::test::almost_equal_array; 
+    
+    # [test]
+    fn adjugate_from_example(){
+        let matrix = Matrix3x3::new(
+            -3.0, 2.0, -5.0,
+            -1.0, 0.0, -2.0,
+            3.0, -4.0, 1.0
+        );
+
+
+        almost_equal_array(
+            &matrix.adjugate().to_array(),
+            &[
+                -8.0, 18.0, -4.0,
+                -5.0, 12.0, -1.0,
+                4.0, -6.0, 2.0
+            ]
+        )
+
+    }
 
     #[test]
     fn dcm_transpose(){
