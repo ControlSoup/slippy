@@ -135,7 +135,6 @@ impl Mul<Quaternion> for Quaternion{
 mod tests {
     use super::*;
     use crate::test::almost_equal_array; 
-    use approx::assert_relative_eq;
 
     // Conversions
 

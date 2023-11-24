@@ -9,6 +9,7 @@ use crate::strapdown::matrix::Matrix3x3;
 use crate::strapdown::vector::Vector3;
 use crate::strapdown::quaternion::Quaternion;
 use crate::sim::integration::Integrate;
+use crate::sim::runtime::{BasicRunTime, Save};
 
 // ----------------------------------------------------------------------------
 // State
@@ -81,6 +82,42 @@ impl Integrate for State{
     }
 }
 
+impl Save for State{
+    fn save(self, mut runtime: BasicRunTime) where Self: Sized {
+        runtime.add_or_set("State.pos.x [m]", self.pos_m.x);
+        runtime.add_or_set("State.pos.y [m]", self.pos_m.y);
+        runtime.add_or_set("State.pos.z [m]", self.pos_m.z);
+
+        runtime.add_or_set("State.vel.x [m/s]", self.vel_mps.x);
+        runtime.add_or_set("State.vel.y [m/s]", self.vel_mps.y);
+        runtime.add_or_set("State.vel.z [m/s]", self.vel_mps.z);
+
+        runtime.add_or_set("State.accel.x [m/s^2]", self.accel_mps2.x);
+        runtime.add_or_set("State.accel.y [m/s^2]", self.accel_mps2.y);
+        runtime.add_or_set("State.accel.z [m/s^2]", self.accel_mps2.z);
+
+        runtime.add_or_set("State.quat.a [-]", self.quat.a);
+        runtime.add_or_set("State.quat.b [-]", self.quat.b);
+        runtime.add_or_set("State.quat.c [-]", self.quat.c);
+        runtime.add_or_set("State.quat.d [-]", self.quat.d);
+
+        runtime.add_or_set("State.ang_vel.x [rad/s]", self.ang_vel_radps.x);
+        runtime.add_or_set("State.ang_vel.y [rad/s]", self.ang_vel_radps.y);
+        runtime.add_or_set("State.ang_vel.z [rad/s]", self.ang_vel_radps.z);
+
+        runtime.add_or_set(
+            "State.ang_accel.x [rad/s^2]", self.ang_accel_radps2.x
+        );
+        runtime.add_or_set(
+            "State.ang_accel.y [rad/s^2]", self.ang_accel_radps2.y
+        );
+        runtime.add_or_set(
+            "State.ang_accel.z [rad/s^2]", self.ang_accel_radps2.z
+        );
+
+    }
+}
+
 // ----------------------------------------------------------------------------
 // Inputs
 // ----------------------------------------------------------------------------
@@ -147,7 +184,7 @@ impl Inputs{
             mass_props.i_tensor_cg_kgpm2 * state.ang_vel_radps;
 
         // w x (I * w)
-        let w_cross_i_dot_w = state.ang_vel_radps.cross(i_dot_w);
+        let w_cross_i_dot_w = state.ang_vel_radps.cross(&i_dot_w);
 
         // M - (w x (I * w))
         let m_minus_w_cross_i_dot_w = total_moments_nm - w_cross_i_dot_w;

@@ -13,6 +13,7 @@ pub struct BasicRunTime{
     break_flag: bool,
     data_dict: HashMap<String, Vec<f64>>
 }
+
 impl BasicRunTime{
     pub fn new(
         max_x_value: f64,
@@ -186,10 +187,13 @@ impl BasicRunTime{
         writer.flush().unwrap();
     }
 
-    // Itterator pattern please pub fn itt_x_array()
-
 }
 
+
+pub trait Save{
+    fn save(self, mut runtime: BasicRunTime) where Self: Sized{
+    }
+}
 
 #[cfg(test)]
 mod tests {

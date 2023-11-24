@@ -67,12 +67,12 @@ impl Vector3{
         return (self.x.powf(2.0) + self.y.powf(2.0) + self.z.powf(2.0)).sqrt()
     }
 
-    pub fn dot(self, vec: Vector3) -> f64{
+    pub fn dot(self, vec: &Vector3) -> f64{
         // Eq 3.1.1-5, Pg 3-8
         return (self.x * vec.x) + (self.y * vec.y) + (self.z * vec.z)
     }
 
-    pub fn cross(self, vec: Vector3) -> Vector3{
+    pub fn cross(self, vec: &Vector3) -> Vector3{
         // Eq 3.1.1-6, Pg 3-8
         return Vector3::new(
             (self.y * vec.z) - (self.z * vec.y),
@@ -141,8 +141,8 @@ mod tests {
         let vec = Vector3::new(1.0, 2.0, 3.0);
         let vec2 = Vector3::new(2.0, 1.0, 3.0);
 
-        let vec_dot_vec2 = vec.dot(vec2);
-        let vec2_dot_vec = vec2.dot(vec);
+        let vec_dot_vec2 = vec.dot(&vec2);
+        let vec2_dot_vec = vec2.dot(&vec);
 
         assert_relative_eq!(
             vec_dot_vec2,
@@ -157,8 +157,8 @@ mod tests {
         let vec = Vector3::new(1.0, 2.0, 3.0);
         let vec2 = Vector3::new(2.0, 1.0, 3.0);
 
-        let vec_cross_vec2 = vec.cross(vec2);
-        let vec2_cross_vec = vec2.cross(vec);
+        let vec_cross_vec2 = vec.cross(&vec2);
+        let vec2_cross_vec = vec2.cross(&vec);
 
         // Eq 3.1.1-8, Pg 3-8s
         almost_equal_array(
