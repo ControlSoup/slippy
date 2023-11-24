@@ -5,7 +5,7 @@ use csv;
 #[allow(dead_code)]
 
 #[derive(Debug)]
-pub struct BasicRunTime{
+pub struct Runtime{
     x_key: String,
     x_increment: f64,
     x_array: Vec<f64>,
@@ -14,12 +14,12 @@ pub struct BasicRunTime{
     data_dict: HashMap<String, Vec<f64>>
 }
 
-impl BasicRunTime{
+impl Runtime{
     pub fn new(
         max_x_value: f64,
         x_increment: f64,
         x_key: &str
-    ) -> BasicRunTime{
+    ) -> Runtime{
 
         // Intialize the array for which we will step through
         let x_key = x_key.to_string();
@@ -37,7 +37,7 @@ impl BasicRunTime{
         // Init Hashmap for Data Storage
         let data_dict: HashMap<String, Vec<f64>> = HashMap::new();
 
-        return BasicRunTime {
+        return Runtime {
             x_key,
             x_increment,
             x_array,
@@ -189,9 +189,8 @@ impl BasicRunTime{
 
 }
 
-
 pub trait Save{
-    fn save(self, mut runtime: BasicRunTime) where Self: Sized{
+    fn save(self, mut runtime: Runtime) where Self: Sized{
     }
 }
 
@@ -205,7 +204,7 @@ mod tests {
         let dynamic_key = "test_count [-]";
 
         // Intialize a RunTime
-        let mut runtime =  BasicRunTime::new(
+        let mut runtime =  Runtime::new(
             10.0,
             1.0,
             "time [s]"

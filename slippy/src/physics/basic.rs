@@ -9,7 +9,7 @@ use crate::strapdown::matrix::Matrix3x3;
 use crate::strapdown::vector::Vector3;
 use crate::strapdown::quaternion::Quaternion;
 use crate::sim::integration::Integrate;
-use crate::sim::runtime::{BasicRunTime, Save};
+use crate::sim::runtime::{Runtime, Save};
 
 // ----------------------------------------------------------------------------
 // State
@@ -83,7 +83,7 @@ impl Integrate for State{
 }
 
 impl Save for State{
-    fn save(self, mut runtime: BasicRunTime) where Self: Sized {
+    fn save(self, mut runtime: Runtime) where Self: Sized {
         runtime.add_or_set("State.pos.x [m]", self.pos_m.x);
         runtime.add_or_set("State.pos.y [m]", self.pos_m.y);
         runtime.add_or_set("State.pos.z [m]", self.pos_m.z);
@@ -197,6 +197,51 @@ impl Inputs{
 
 }
 
+impl Save for Inputs{
+
+    fn save(self, mut runtime: Runtime) where Self: Sized {
+        runtime.add_or_set(
+            "Inputs.local_level_force.x [N]", self.local_level_force_n.x
+        );
+        runtime.add_or_set(
+            "Inputs.local_level_force.y [N]", self.local_level_force_n.y
+        );
+        runtime.add_or_set(
+            "Inputs.local_level_force.z [N]", self.local_level_force_n.z
+        );
+
+        runtime.add_or_set(
+            "Inputs.local_level_moment.x [Nm]", self.local_level_moment_nm.x 
+        );
+        runtime.add_or_set(
+            "Inputs.local_level_moment.y [Nm]", self.local_level_moment_nm.y 
+        );
+        runtime.add_or_set(
+            "Inputs.local_level_moment.z [Nm]", self.local_level_moment_nm.z 
+        );
+
+        runtime.add_or_set(
+            "Inputs.body_force.x [N]", self.body_force_n.x
+        );
+        runtime.add_or_set(
+            "Inputs.body_force.y [N]", self.body_force_n.y
+        );
+        runtime.add_or_set(
+            "Inputs.body_force.z [N]", self.body_force_n.z
+        );
+
+        runtime.add_or_set(
+            "Inputs.body_moment.x [Nm]", self.body_moment_nm.x 
+        );
+        runtime.add_or_set(
+            "Inputs.body_moment.y [Nm]", self.body_moment_nm.y 
+        );
+        runtime.add_or_set(
+            "Inputs.body_moment.z [Nm]", self.body_moment_nm.z 
+        );
+    }
+}
+
 // ----------------------------------------------------------------------------
 // Mass Properties
 // ----------------------------------------------------------------------------
@@ -226,12 +271,47 @@ impl MassProperties{
         }
     }
 
-    pub fn zeros() -> MassProperties{
+    pub fn identity() -> MassProperties{
         return MassProperties {
             mass_cg_kg: 1.0,
             i_tensor_cg_kgpm2: Matrix3x3::identity(),
             inv_i_tensor_cg_kgpm2:Matrix3x3::identity()
         }
+    }
+}
+
+
+impl Save for MassProperties{
+    fn save(self, mut runtime: Runtime) where Self: Sized {
+        runtime.add_or_set("MassProperties.mass_cg [kg]", self.mass_cg_kg);
+
+        runtime.add_or_set(
+            "MassProperties.Ixx [kg/m^2]", self.i_tensor_cg_kgpm2.c11
+        );
+        runtime.add_or_set(
+            "MassProperties.Ixy [kg/m^2]", self.i_tensor_cg_kgpm2.c12
+        );
+        runtime.add_or_set(
+            "MassProperties.Ixz [kg/m^2]", self.i_tensor_cg_kgpm2.c13
+        );
+        runtime.add_or_set(
+            "MassProperties.Iyx [kg/m^2]", self.i_tensor_cg_kgpm2.c21
+        );
+        runtime.add_or_set(
+            "MassProperties.Iyy [kg/m^2]", self.i_tensor_cg_kgpm2.c22
+        );
+        runtime.add_or_set(
+            "MassProperties.Iyz [kg/m^2]", self.i_tensor_cg_kgpm2.c23
+        );
+        runtime.add_or_set(
+            "MassProperties.Izx [kg/m^2]", self.i_tensor_cg_kgpm2.c31
+        );
+        runtime.add_or_set(
+            "MassProperties.Izx [kg/m^2]", self.i_tensor_cg_kgpm2.c32
+        );
+        runtime.add_or_set(
+            "MassProperties.Izz [kg/m^2]", self.i_tensor_cg_kgpm2.c33
+        );
     }
 }
 
@@ -255,7 +335,7 @@ mod tests {
             return TestObject {
                 state: State::init(),
                 inputs: Inputs::zeros(),
-                mass_props: MassProperties::zeros()
+                mass_props: MassProperties::identity()
             }
         }
         fn update(&mut self, dt: f64){
@@ -270,7 +350,7 @@ mod tests {
     fn zeros(){
         let inputs = Inputs::zeros();
         let state = State::init();
-        let mass_props = MassProperties::zeros();
+        let mass_props = MassProperties::identity();
     }
 
     #[allow(unused)]
