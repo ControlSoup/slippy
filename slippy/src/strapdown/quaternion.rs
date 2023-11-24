@@ -127,11 +127,17 @@ impl Mul<Quaternion> for Quaternion{
     }
 }
 
+// ----------------------------------------------------------------------------
+// Tests
+// ----------------------------------------------------------------------------
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::test::almost_equal_array; 
     use approx::assert_relative_eq;
+
+    // Conversions
 
     #[test]
     fn quat_to_euler(){
@@ -145,8 +151,10 @@ mod tests {
         )
     }
 
+    // Derivative 
+
     #[test]
-    fn quat_rate(){
+    fn quat_derivative(){
         let mut quat = Quaternion::identity();
         let rate = Vector3::new(0.1, 0.0, 0.0);
 

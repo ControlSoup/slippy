@@ -12,7 +12,7 @@ use std::f64::consts::PI;
 use crate::strapdown::vector::Vector3;
 
 // ----------------------------------------------------------------------------
-// Direction Cosines [3.2.1] Pg 3-15
+// Matrix and Direction Cosines [3.2.1] Pg 3-15
 // ----------------------------------------------------------------------------
 
 #[derive(
@@ -173,6 +173,10 @@ impl Matrix3x3{
 
 }
 
+// ----------------------------------------------------------------------------
+// Operations
+// ----------------------------------------------------------------------------
+
 impl Mul<Matrix3x3> for Matrix3x3{
     type Output = Matrix3x3;
 
@@ -213,14 +217,20 @@ impl Mul<Vector3> for Matrix3x3{
     }
 }
 
+// ----------------------------------------------------------------------------
+// Tests
+// ----------------------------------------------------------------------------
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::test::almost_equal_array; 
-    
+
+    // Matrix Operations
+
     # [test]
     fn adjugate_from_example(){
+        // https://en.wikipedia.org/wiki/Adjugate_matrix
         let matrix = Matrix3x3::new(
             -3.0, 2.0, -5.0,
             -1.0, 0.0, -2.0,
@@ -238,6 +248,48 @@ mod tests {
         )
 
     }
+
+    #[test]
+    fn matmul_from_example(){
+        let matrix = Matrix3x3::new(
+            1.0, 2.0, 3.0,
+            4.0, 5.0, 6.0,
+            7.0, 8.0, 9.0
+        );
+        let matrix2 = Matrix3x3::new(
+            100.0, 200.0, 300.0,
+            400.0, 500.0, 600.0,
+            700.0, 800.0, 900.0
+        );
+
+        almost_equal_array(
+            &(matrix * matrix2).to_array(),
+            &[
+                 3000.0,  3600.0,  4200.0, 
+                 6600.0,  8100.0,  9600.0,
+                10200.0, 12600.0, 15000.0
+            ]
+        )
+    }
+
+    #[test]
+    fn matmul_vector_from_example(){
+        let matrix = Matrix3x3::new(
+            1.0, 2.0, 3.0,
+            4.0, 5.0, 6.0,
+            7.0, 8.0, 9.0
+        );
+        let vector = Vector3::new(
+            100.0, 200.0, 300.0
+        );
+
+        almost_equal_array(
+            &(matrix * vector).to_array(), 
+            &[1400.0, 3200.0, 5000.0]
+        )
+    }
+
+    // DCM Operations
 
     #[test]
     fn dcm_transpose(){

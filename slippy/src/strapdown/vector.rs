@@ -112,8 +112,6 @@ impl Vector3{
     }
 
     pub fn to_quat(self)-> Quaternion{
-        // Abbreviations for the various angular functions
-
         let cr = (self.x * 0.5).cos();
         let sr = (self.x * 0.5).sin();
         let cp = (self.y * 0.5).cos();
@@ -169,6 +167,7 @@ mod tests {
         )
     }   
 
+    // Euler conversion
     #[test]
     fn euler_to_dcm(){
 

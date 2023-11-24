@@ -230,7 +230,7 @@ mod tests {
 
     #[allow(unused)]
     #[test]
-    fn test_zeros(){
+    fn zeros(){
         let inputs = Inputs::zeros();
         let state = State::init();
         let mass_props = MassProperties::zeros();
@@ -238,7 +238,7 @@ mod tests {
 
     #[allow(unused)]
     #[test]
-    fn test_new(){
+    fn new(){
         let inputs = Inputs::new(
             [1.0, 1.0, 1.1],
             [1.0, 1.0, 1.1],
@@ -272,7 +272,7 @@ mod tests {
 
     #[allow(unused)]
     #[test]
-    fn test_translation(){
+    fn local_translation(){
         let mut object = TestObject::zeros();
 
         // Set Forces
@@ -280,7 +280,7 @@ mod tests {
         object.inputs.local_level_force_n = Vector3::new(1.0, 1.0, 1.0);
 
         let dt = 1e-4;
-        let max_int = (5.0 / dt) as i64;
+        let max_int = (5.0 / dt) as usize;
 
         let mut time = 0.0;
         for i in 0..max_int{
@@ -301,30 +301,44 @@ mod tests {
     }
 
     #[test]
-    fn test_pure_rotation(){
-        let mut object = TestObject::zeros();
+    fn local_rotation(){
 
-        object.state.quat = Quaternion::identity();
+        for i in 0..2{
+            let mut object = TestObject::zeros();
+            let mut final_w = [0.0, 0.0, 0.0];
+            let mut final_theta = [0.0, 0.0, 0.0];
+            let mut local_level_moments_nm = [0.0, 0.0, 0.0];
 
-        object.inputs.local_level_moment_nm = Vector3::new(0.1, 0.0, 0.0);
 
-        let dt = 0.25;
-        let max_int = (5.0 / dt) as i64;
+            final_w[i] = 0.5;
+            final_theta[i] = 1.25;
+            local_level_moments_nm[i] = 0.1;
 
-        for _ in 0..max_int{
-            object.update(dt);
+
+            object.state.quat = Quaternion::identity();
+
+            object.inputs.local_level_moment_nm = Vector3::from_array(
+                local_level_moments_nm
+            );
+
+            let dt = 0.25;
+            let max_int = (5.0 / dt) as i64;
+
+            for _ in 0..max_int{
+                object.update(dt);
+            }
+
+            // w  = w_0 + alpha*t
+            almost_equal_array(
+                &object.state.ang_vel_radps.to_array(),
+                &final_w
+            );
+
+            // theta = w_0 * t + alpht * t^2 / 2
+            almost_equal_array(
+                &object.state.quat.to_euler().to_array(),
+                &final_theta
+            );
         }
-
-        // w  = w_0 + alpha*t
-        almost_equal_array(
-            &object.state.ang_vel_radps.to_array(),
-            &[0.5, 0.0, 0.0]
-        );
-
-        // theta = w_0 * t + alpht * t^2 / 2
-        almost_equal_array(
-            &object.state.quat.to_euler().to_array(),
-            &[1.25, 0.0, 0.0],
-        )
     }
 }
