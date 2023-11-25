@@ -2,8 +2,8 @@
 use derive_more;
 
 use crate::strapdown::{
-    matrix::Matrix3x3, 
-    vector::Vector3, 
+    matrix::Matrix3x3,
+    vector::Vector3,
     quaternion::Quaternion
 };
 
@@ -28,7 +28,7 @@ pub struct RigidBody{
     pub local_level_moment_nm: Vector3,
     pub body_force_n: Vector3,
     pub body_moment_nm: Vector3,
-    
+
     // State
     pos_m: Vector3,
     vel_mps: Vector3,
@@ -58,7 +58,7 @@ impl RigidBody{
         mass_cg_kg: f64,
         i_tensor_cg_kgpm2: [f64; 9]
     ) -> RigidBody{
-        
+
         // Precompute inverse of Inertia tensor
         let i_tensor_cg_kgpm2 = Matrix3x3::from_array(i_tensor_cg_kgpm2);
         let inv_i_tensor_cg_kgpm2 = i_tensor_cg_kgpm2.inv()
@@ -78,7 +78,7 @@ impl RigidBody{
             ang_accel_radps2: Vector3::from_array(ang_accel_radps2),
             mass_cg_kg,
             i_tensor_cg_kgpm2,
-            inv_i_tensor_cg_kgpm2 
+            inv_i_tensor_cg_kgpm2
         }
     }
 
@@ -117,10 +117,10 @@ impl RigidBody{
             inv_i_tensor_cg_kgpm2: Matrix3x3::of(0.0)
         }
     }
-} 
+}
 
 impl Integrate for RigidBody{
-    
+
     fn effects(&mut self) {
         // Rigidbody Dynamics
         // Source:
@@ -129,12 +129,12 @@ impl Integrate for RigidBody{
         // Notes:
         //     Forces and moments act about the body frame
 
-        let total_forces_n = 
-            self.local_level_force_n + 
+        let total_forces_n =
+            self.local_level_force_n +
             self.quat.transform(self.body_force_n);
 
-        let total_moments_nm =  
-            self.local_level_moment_nm + 
+        let total_moments_nm =
+            self.local_level_moment_nm +
             self.quat.transform(self.body_moment_nm);
 
         // F = ma
@@ -186,10 +186,10 @@ impl Save for RigidBody{
         runtime.add_or_set("accel.y [m/s^2]", self.accel_mps2.y);
         runtime.add_or_set("accel.z [m/s^2]", self.accel_mps2.z);
 
-        runtime.add_or_set(".quat.a [-]", self.quat.a);
-        runtime.add_or_set(".quat.b [-]", self.quat.b);
-        runtime.add_or_set(".quat.c [-]", self.quat.c);
-        runtime.add_or_set(".quat.d [-]", self.quat.d);
+        runtime.add_or_set("quat.a [-]", self.quat.a);
+        runtime.add_or_set("quat.b [-]", self.quat.b);
+        runtime.add_or_set("quat.c [-]", self.quat.c);
+        runtime.add_or_set("quat.d [-]", self.quat.d);
 
         runtime.add_or_set("ang_vel.x [rad/s]", self.ang_vel_radps.x);
         runtime.add_or_set("ang_vel.y [rad/s]", self.ang_vel_radps.y);
@@ -217,13 +217,13 @@ impl Save for RigidBody{
         );
 
         runtime.add_or_set(
-            "local_level_moment.x [Nm]", self.local_level_moment_nm.x 
+            "local_level_moment.x [Nm]", self.local_level_moment_nm.x
         );
         runtime.add_or_set(
-            "local_level_moment.y [Nm]", self.local_level_moment_nm.y 
+            "local_level_moment.y [Nm]", self.local_level_moment_nm.y
         );
         runtime.add_or_set(
-            "local_level_moment.z [Nm]", self.local_level_moment_nm.z 
+            "local_level_moment.z [Nm]", self.local_level_moment_nm.z
         );
 
         runtime.add_or_set(
@@ -237,13 +237,13 @@ impl Save for RigidBody{
         );
 
         runtime.add_or_set(
-            "body_moment.x [Nm]", self.body_moment_nm.x 
+            "body_moment.x [Nm]", self.body_moment_nm.x
         );
         runtime.add_or_set(
-            "body_moment.y [Nm]", self.body_moment_nm.y 
+            "body_moment.y [Nm]", self.body_moment_nm.y
         );
         runtime.add_or_set(
-            "body_moment.z [Nm]", self.body_moment_nm.z 
+            "body_moment.z [Nm]", self.body_moment_nm.z
         );
 
         // Mass properties

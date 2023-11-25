@@ -1,5 +1,4 @@
 use std::ops::{Mul, Div, Add};
-use ::core::fmt::Debug;
 
 
 pub trait Integrate{
@@ -12,7 +11,6 @@ pub trait Integrate{
         where Self:
             Sized +
             Clone +
-            Debug +
             Add<Self, Output = Self> +
             Mul<f64, Output = Self> +
             Div<f64, Output = Self>,
@@ -93,7 +91,7 @@ mod tests {
 
         fn effects(&mut self) {
             self.acceleration = self.force / self.mass;
-        } 
+        }
 
         fn get_derivative(&self)-> Self {
             let mut derivative = Location::zeros();
