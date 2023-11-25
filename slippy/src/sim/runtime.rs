@@ -10,7 +10,7 @@ pub struct Runtime{
     x_increment: f64,
     x_array: Vec<f64>,
     current_index: usize,
-    break_flag: bool,
+    pub is_running: bool,
     data_dict: HashMap<String, Vec<f64>>
 }
 
@@ -42,7 +42,7 @@ impl Runtime{
             x_increment,
             x_array,
             current_index: 0,
-            break_flag: false,
+            is_running: true,
             data_dict
         }
     }
@@ -83,7 +83,7 @@ impl Runtime{
                 self.x_array.len(),
                 self.current_index,
             );
-            self.break_flag = true;
+            self.is_running = false;
         }
         else{
             // Store the current value
@@ -118,6 +118,10 @@ impl Runtime{
 
     pub fn get_x(&self) -> f64{
         return self.x_array[self.current_index];
+    }
+
+    pub fn get_dx(&self) -> f64{
+        return self.x_increment;
     }
 
     fn trim_from_curr_index(&mut self){
@@ -188,9 +192,8 @@ impl Runtime{
     }
 
 }
-
 pub trait Save{
-    fn save(self, mut runtime: Runtime) where Self: Sized{
+    fn save(&self, node_name: String, runtime: &mut Runtime) where Self: Sized{
     }
 }
 
@@ -233,6 +236,7 @@ mod tests {
                 runtime.get_value(dynamic_key) - 1.0
             );
         }
+
         // runtime.export_to_csv("test", "")
 
     }

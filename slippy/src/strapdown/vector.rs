@@ -3,7 +3,6 @@
 // ----------------------------------------------------------------------------
 
 // 3rd Party
-use std::ops::Mul;
 use derive_more;
 
 use super::{quaternion::Quaternion, matrix::Matrix3x3};
