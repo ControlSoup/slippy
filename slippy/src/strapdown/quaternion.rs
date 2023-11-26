@@ -139,10 +139,11 @@ impl Quaternion{
 impl Mul<Vector3> for Quaternion{
     type Output = Quaternion;
     fn mul(self, vec: Vector3) -> Quaternion{
+        // Eq 3.2.4-10, Pg 3-41 (Simplifed form)
         return Quaternion::new(
             (-self.b * vec.x) + (-self.c * vec.y) + (-self.d * vec.z),
             (self.a * vec.x) + (-self.d * vec.y) + (self.c * vec.z),
-            (self.d * vec.x) + (self.a * vec.y) + (self.b * vec.z),
+            (self.d * vec.x) + (self.a * vec.y) + (-self.b * vec.z),
             (-self.c * vec.x) + (self.b * vec.y) + (self.a * vec.z)
         )
     }
@@ -151,11 +152,12 @@ impl Mul<Vector3> for Quaternion{
 impl Mul<Quaternion> for Quaternion{
     type Output = Quaternion;
     fn mul(self, quat: Quaternion) -> Quaternion{
+        // Eq 3.2.4-10, Pg 3-41
         return Quaternion::new(
           (self.a * quat.a) + (-self.b * quat.b) + (-self.c * quat.c) + (-self.d * quat.d),
-          (-self.b * quat.a) + (self.a * quat.b) + (-self.d * quat.c) + (self.c * quat.d),
-          (-self.c * quat.a) + (self.d * quat.b) + (self.a * quat.c) + (self.b * quat.d),
-          (-self.d * quat.a) + (-self.c * quat.b) + (self.b * quat.c) + (self.a * quat.d)
+          (self.b * quat.a) + (self.a * quat.b) + (-self.d * quat.c) + (self.c * quat.d),
+          (self.c * quat.a) + (self.d * quat.b) + (self.a * quat.c) + (-self.b * quat.d),
+          (self.d * quat.a) + (-self.c * quat.b) + (self.b * quat.c) + (self.a * quat.d)
         )
     }
 }
@@ -166,8 +168,27 @@ impl Mul<Quaternion> for Quaternion{
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
     use crate::test::almost_equal_array;
+
+    // Math
+    # [test]
+    fn quat_90_transform(){
+        let vec = Vector3::new(1.0, 2.0, 3.0);
+        let quat = Quaternion::new(
+            0.7071067811865476,
+            0.0,
+            0.7071067811865475,
+            0.0
+        );
+
+        let transformation = quat.transform(vec).to_array();
+        almost_equal_array(
+            &transformation,
+            &[3.0, 2.0, -1.0]
+        );
+    }
 
     // Conversions
 
@@ -205,12 +226,13 @@ mod tests {
         let amount = (10.0 / increment) as usize;
 
         for _ in 0..amount{
-            let rate = quat.transform(Vector3::new(0.1, 0.1, 0.1));
+            let rate = quat.transform(Vector3::new(0.1, 0.0, 0.0));
             quat += quat.derivative(rate) * increment;
         }
+
         almost_equal_array(
             &quat.to_euler().to_array(),
-            &[1.0, 1.0, 1.0]
+            &[1.0, 0.0, 0.0]
         );
 
 

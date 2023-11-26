@@ -2,7 +2,7 @@ import bpy
 import numpy as np
 import sys
 from pandas import read_csv
-    
+
 # Set the path to your CSV file
 csv_file_path = 'data/test.csv'
 
@@ -23,6 +23,7 @@ def csv_to_datadict(file_path: str, fps, time_key='time [s]'):
 # Function to set the location and rotation of the object at a specific frame
 def set_object_transform(frame, obj, pos, quat):
     obj.show_axis = True
+    obj.axis_length *= 2.0
     obj.location = pos
     obj.rotation_mode = 'QUATERNION'
     obj.rotation_quaternion = quat
@@ -30,7 +31,7 @@ def set_object_transform(frame, obj, pos, quat):
     obj.keyframe_insert(data_path="rotation_quaternion", frame=frame)
 
 # Calcualte fps to view in real time
-fps = int(55)
+fps = int(50)
 bpy.context.scene.render.fps = fps
 
 # Clear existing keyframes
@@ -52,7 +53,6 @@ for i,_ in enumerate(datadict['time [s]']):
         datadict['quat.b [-]'][i],
         datadict['quat.c [-]'][i],
         datadict['quat.d [-]'][i]
-        
     ]
 
     # Modify trajectory for the given frame

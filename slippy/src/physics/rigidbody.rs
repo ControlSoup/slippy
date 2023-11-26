@@ -127,15 +127,15 @@ impl Integrate for RigidBody{
         //   https://en.wikipedia.org/wiki/Rigid_body_dynamics
         //
         // Notes:
-        //     Forces and moments act about the body frame
+        //     accelerations act about nav frame
 
         let total_forces_n =
-            self.body_force_n +
-            self.quat.transform(self.nav_force_n);
+            self.nav_force_n +
+            self.quat.transform(self.body_force_n);
 
         let total_moments_nm =
-            self.body_moment_nm +
-            self.quat.transform(self.nav_moment_nm);
+            self.nav_moment_nm +
+            self.quat.transform(self.body_moment_nm);
 
         // F = ma
         self.accel_mps2 = total_forces_n / self.mass_cg_kg;
@@ -163,7 +163,7 @@ impl Integrate for RigidBody{
         d.pos_m = self.vel_mps.clone();
         d.vel_mps = self.accel_mps2.clone();
         d.quat = self.quat.derivative(self.ang_vel_radps).clone();
-        d.ang_vel_radps = self.ang_accel_radps2;
+        d.ang_vel_radps = self.ang_accel_radps2.clone();
 
         return d
 
@@ -172,7 +172,7 @@ impl Integrate for RigidBody{
 
 
 impl Save for RigidBody{
-    fn save(&self, node_name: String, runtime: &mut Runtime) where Self: Sized {
+    fn save_data(&self, node_name: String, runtime: &mut Runtime) where Self: Sized {
         // State
         runtime.add_or_set("pos.x [m]", self.pos_m.x.clone());
         runtime.add_or_set("pos.y [m]", self.pos_m.y.clone());
@@ -301,7 +301,10 @@ impl Save for RigidBody{
 
 #[cfg(test)]
 mod tests {
+    use std::f64::consts::PI;
+
     use crate::test::almost_equal_array;
+    use approx::assert_relative_eq;
 
     use super::*;
 
@@ -310,8 +313,38 @@ mod tests {
         let mut object = RigidBody::identity();
 
         // Set Forces
+        object.quat = Vector3::new(0.0, PI / 2.0,0.0).to_quat();
         object.pos_m = Vector3::new(0.0, 1.0, 2.0);
         object.body_force_n = Vector3::new(1.0, 1.0, 1.0);
+
+        let dt = 1e-4;
+        let max_int = (5.0 / dt) as usize;
+
+        for _ in 0..max_int{
+            object = object.rk4(dt);
+        }
+
+        // vf = vi + (f/m)t = [5.0, 5.0, 5.0]
+        almost_equal_array(
+            &object.vel_mps.to_array(),
+            &[5.0, 5.0, -5.0]
+        );
+
+        // x = vi * t + a * t^2 /2  = [12.5, 13.5, 14.5]
+        // But oreintation is rotated 90 degrees with x facing down
+        almost_equal_array(
+            &object.pos_m.to_array(),
+            &[12.5, 13.5, -10.5]
+        );
+    }
+    # [test]
+    fn nav_force_n(){
+        let mut object = RigidBody::identity();
+
+        // Set Forces
+        object.quat = Vector3::new(0.0, PI / 2.0,0.0).to_quat();
+        object.pos_m = Vector3::new(0.0, 1.0, 2.0);
+        object.nav_force_n = Vector3::new(1.0, 1.0, 1.0);
 
         let dt = 1e-4;
         let max_int = (5.0 / dt) as usize;
@@ -327,37 +360,71 @@ mod tests {
         );
 
         // x = vi * t + a * t^2 /2  = [12.5, 13.5, 14.5]
+        // Oreintation should not effect this
         almost_equal_array(
             &object.pos_m.to_array(),
-            &[12.5, 13.5, 14.5]
+            &[12.5,13.5, 14.5]
         );
     }
 
     #[test]
-    fn body_rotation(){
+    fn spin_cone_simulator(){
+        // SPIN-CONE SIMULATOR from Strapdown Analytics
+        // Section: 11.2.1, Pg 11-12
 
-        let mut object = RigidBody::identity();
+        let beta = 0.25; // Precessional axis angle
+        let omega_s = 1.0; // Intertial rotation rate
+        let omega_c = 1.5; // Intertial precessional rate
 
-        object.nav_moment_nm = Vector3::new(0.1, 0.1, 0.1);
-        object.quat = Vector3::new(0.0, 0.1, 0.2).to_quat();
+        // Use an identity intertia tensor and mass
+        let mut uut = RigidBody{
+            nav_force_n: Vector3::zeros(),
+            nav_moment_nm: Vector3::zeros(),
+            body_force_n: Vector3::zeros(),
+            body_moment_nm: Vector3::zeros(),
+            pos_m: Vector3::zeros(),
+            vel_mps: Vector3::zeros(),
+            accel_mps2: Vector3::zeros(),
+            quat: Vector3::new(beta, 0.0, 0.0).to_quat(),
+            ang_accel_radps2: Vector3::zeros(),
+            ang_vel_radps: Vector3::new(0.0, 0.0, omega_s),
+            mass_cg_kg: 1.0,
+            i_tensor_cg_kgpm2: Matrix3x3::identity(),
+            inv_i_tensor_cg_kgpm2: Matrix3x3::identity()
+        };
 
-        let dt = 1e-3;
-        let max_int = (5.0 / dt) as i64;
+        let mut runtime = Runtime::new(10.0, 1e-3, "time [s]");
+        let dt = runtime.get_dx();
 
-        for _ in 0..max_int{
-            object = object.rk4(dt);
+        while runtime.is_running{
+            // Update spin cone velocity
+            let omega_s_vec =
+                uut.quat.transform(Vector3::new(0.0, 0.0, omega_s));
+            let omega_c_vec = Vector3::new(0.0, 0.0, omega_c);
+            uut.ang_vel_radps = omega_s_vec + omega_c_vec;
+
+            uut = uut.rk4(dt);
+            uut.save_data("test".to_string(), &mut runtime);
+            runtime.increment();
         }
 
-        // w  = w_0 + alpha*t
+        runtime.export_to_csv("spin_cone", "results/data");
+        let uut_dcm = uut.quat.to_dcm();
+        let end_phi =
+            (omega_s - (omega_c * beta.cos())) * runtime.get_max_x();
+        let end_theta = (PI / 2.0) - beta;
+        let end_psi = -omega_c * runtime.get_max_x();
+
+        panic!(
+            "\n\n{:?}\n\n{:?}\n\n",
+            uut_dcm,
+            Vector3::new(end_psi, end_theta, end_phi).to_dcm()
+        );
+        // Eq 11.2.1.1-7
         almost_equal_array(
-            &object.ang_vel_radps.to_array(),
-            &[0.5, 0.5, 0.5]
+            &Vector3::new(end_psi, end_theta, end_phi).to_dcm().to_array(),
+            &uut.quat.to_dcm().to_array()
         );
 
-        // theta = w_0 * t + alpht * t^2 / 2
-        almost_equal_array(
-            &object.quat.to_euler().to_array(),
-            &[1.25, 1.35, 1.45]
-        );
     }
 }

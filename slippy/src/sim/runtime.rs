@@ -124,6 +124,10 @@ impl Runtime{
         return self.x_increment;
     }
 
+    pub fn get_max_x(&self) -> f64{
+        return self.x_array[(self.x_array.len() - 1)..][0]
+    }
+
     fn trim_from_curr_index(&mut self){
 
         let mut  new_hashmap: HashMap<String, Vec<f64>> = HashMap::new();
@@ -197,7 +201,7 @@ impl Runtime{
 
 }
 pub trait Save{
-    fn save(&self, node_name: String, runtime: &mut Runtime) where Self: Sized{
+    fn save_data(&self, node_name: String, runtime: &mut Runtime) where Self: Sized{
     }
 }
 
