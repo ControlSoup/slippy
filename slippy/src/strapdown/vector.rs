@@ -1,5 +1,5 @@
 // ----------------------------------------------------------------------------
-// Strapdown Analytics for non embedded applications
+// Strapdown Analytics
 // ----------------------------------------------------------------------------
 
 // 3rd Party
@@ -10,7 +10,7 @@ use super::{quaternion::Quaternion, matrix::Matrix3x3};
 // Crate
 
 // ----------------------------------------------------------------------------
-// Vectors
+// Vectors [3.1, pg 3-1]
 // ----------------------------------------------------------------------------
 #[derive(
     Debug,
@@ -56,6 +56,7 @@ impl Vector3{
     }
 
     pub fn quat_form(self) -> Quaternion{
+        // Eq 3.2.3.1-3, Pg 3-44
         return Quaternion::new(
             0.0, self.x, self.y, self.z
         )
@@ -84,19 +85,19 @@ impl Vector3{
         // Eq 3.2.3.1-1, Pg 3-33
         let _c11 = self.y.cos() * self.x.cos();
         let _c12 =
-            (-self.z.cos() * self.x.sin()) +
-            (self.z.sin() * self.y.sin() * self.x.cos());
+            (-self.z.cos() * self.x.sin())
+            + (self.z.sin() * self.y.sin() * self.x.cos());
         let _c13 =
-            (self.z.sin() * self.x.sin()) +
-            (self.z.cos() * self.y.sin() * self.x.cos());
+            (self.z.sin() * self.x.sin())
+            + (self.z.cos() * self.y.sin() * self.x.cos());
 
         let _c21 = self.y.cos() * self.x.sin();
         let _c22 =
-            (self.z.cos() * self.x.cos()) +
-            (self.z.sin() * self.y.sin() * self.x.sin());
+            (self.z.cos() * self.x.cos())
+            + (self.z.sin() * self.y.sin() * self.x.sin());
         let _c23 =
-            (-self.z.sin() * self.x.cos()) +
-            (self.z.cos() * self.y.sin() * self.x.sin());
+            (-self.z.sin() * self.x.cos())
+            + (self.z.cos() * self.y.sin() * self.x.sin());
 
         let _c31 = -self.y.sin();
         let _c32 = self.z.sin() * self.y.cos();
@@ -105,8 +106,8 @@ impl Vector3{
 
         return Matrix3x3::new(
             _c11, _c12, _c12,
-            _c21, _c22, _c22,
-            _c31, _c32, _c32,
+            _c21, _c22, _c23,
+            _c31, _c32, _c33,
         )
     }
 
@@ -161,10 +162,10 @@ mod tests {
 
         // Eq 3.1.1-8, Pg 3-8s
         almost_equal_array(
-            &vec_cross_vec2.to_array(), 
+            &vec_cross_vec2.to_array(),
             &(-vec2_cross_vec).to_array()
         )
-    }   
+    }
 
     // Euler conversion
     #[test]
@@ -174,7 +175,6 @@ mod tests {
         let euler = Vector3::zeros();
         let dcm = Matrix3x3::identity();
         let euler_to_dcm = euler.to_dcm();
-        
         almost_equal_array(
             &dcm.to_array(),
             &euler_to_dcm.to_array()
@@ -189,7 +189,7 @@ mod tests {
         let quat = Quaternion::identity();
 
         almost_equal_array(
-            &euler.to_quat().to_array(), 
+            &euler.to_quat().to_array(),
             &quat.to_array()
         )
     }

@@ -1,6 +1,5 @@
-
 // ----------------------------------------------------------------------------
-// Strapdown Analytics for non embedded applications
+// Strapdown Analytics
 // ----------------------------------------------------------------------------
 
 // 3rd Party
@@ -9,10 +8,10 @@ use derive_more;
 use std::f64::consts::PI;
 
 // Crate
-use super::vector::Vector3;
+use super::{vector::Vector3, matrix::Matrix3x3};
 
 // ----------------------------------------------------------------------------
-// Quaternions
+// Quaternions [3.24, Pg 3-38]
 // ----------------------------------------------------------------------------
 
 #[derive(
@@ -29,6 +28,7 @@ use super::vector::Vector3;
     derive_more::Neg
 )]
 pub struct Quaternion{
+    // Eq 3.2.4-28, Pg 3-44
     pub a: f64,
     pub b: f64,
     pub c: f64,
@@ -40,7 +40,7 @@ impl Quaternion{
     pub fn new(a: f64, b: f64, c: f64, d: f64) -> Quaternion{
         return Quaternion{a, b, c, d}
     }
-    
+
     pub fn of(num: f64) -> Quaternion{
         return Quaternion::new(num, num, num, num)
     }
@@ -50,19 +50,52 @@ impl Quaternion{
     }
 
     pub fn from_array(array: [f64; 4]) -> Quaternion{
-        return Quaternion::new(array[0], array[1], array[2], array[3]) 
+        return Quaternion::new(array[0], array[1], array[2], array[3])
     }
 
-    pub fn to_array(self) -> [f64; 4]{
+    pub fn to_array(&self) -> [f64; 4]{
         return [self.a, self.b, self.c, self.d]
     }
-    
-    pub fn conjugate(self) -> Quaternion{
+
+    pub fn conjugate(&self) -> Quaternion{
+        // Source:
+        //    https://en.wikipedia.org/wiki/Quaternion
         return Quaternion::new(self.a, -self.b, -self.c, -self.d)
     }
 
+    pub fn to_dcm(&self) -> Matrix3x3{
+        let _c11 =
+            self.a.powf(2.0)
+            + self.b.powf(2.0)
+            - self.c.powf(2.0)
+            - self.d.powf(2.0);
+        let _c12 = 2.0 * (self.b * self.c - (self.a * self.d));
+        let _c13 = 2.0 * (self.b * self.d + (self.a * self.c));
 
-    pub fn to_euler(self) -> Vector3{
+        let _c21 = 2.0 * (self.b * self.c + (self.a * self.d));
+        let _c22 =
+            self.a.powf(2.0)
+            - self.b.powf(2.0)
+            + self.c.powf(2.0)
+            - self.d.powf(2.0);
+        let _c23 = 2.0 * (self.c * self.d - (self.a * self.d));
+
+        let _c31 = 2.0 * (self.b * self.d - (self.a * self.c));
+        let _c32 = 2.0 * (self.c * self.d + (self.a * self.b));
+        let _c33 =
+            self.a.powf(2.0)
+            - self.b.powf(2.0)
+            - self.c.powf(2.0)
+            + self.d.powf(2.0);
+
+        return Matrix3x3::new(
+            _c11, _c12, _c13,
+            _c21, _c22, _c23,
+            _c31, _c32, _c33,
+        )
+    }
+
+    pub fn to_euler(&self) -> Vector3{
         let mut euler = Vector3::zeros();
         let  sqw = self.a * self.a;
         let  sqx = self.b * self.b;
@@ -134,7 +167,7 @@ impl Mul<Quaternion> for Quaternion{
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test::almost_equal_array; 
+    use crate::test::almost_equal_array;
 
     // Conversions
 
@@ -145,12 +178,24 @@ mod tests {
         let euler = Vector3::zeros();
 
         almost_equal_array(
-            &quat.to_euler().to_array(), 
+            &quat.to_euler().to_array(),
             &euler.to_array()
         )
     }
 
-    // Derivative 
+    #[test]
+    fn quat_to_dcm(){
+        // Identity
+        let quat = Quaternion::identity();
+        let dcm = Matrix3x3::identity();
+
+        almost_equal_array(
+            &quat.to_dcm().to_array(),
+            &dcm.to_array()
+        )
+    }
+
+    // Derivative
 
     #[test]
     fn quat_derivative(){
@@ -158,14 +203,14 @@ mod tests {
         let rate = Vector3::new(0.1, 0.0, 0.0);
 
         let increment = 1e-6;
-        let amount = (10.0 / increment) as usize; 
+        let amount = (10.0 / increment) as usize;
 
         for _ in 0..amount{
             quat += quat.derivative(rate) * increment;
         }
         almost_equal_array(
-            &quat.to_euler().to_array(), 
-            &[1.0, 0.0, 0.0] 
+            &quat.to_euler().to_array(),
+            &[1.0, 0.0, 0.0]
         );
 
     }

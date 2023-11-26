@@ -24,8 +24,8 @@ use crate::sim::{integration::Integrate, runtime::{Runtime, Save}};
 
 pub struct RigidBody{
     // Forces and Moments
-    pub local_level_force_n: Vector3,
-    pub local_level_moment_nm: Vector3,
+    pub nav_force_n: Vector3,
+    pub nav_moment_nm: Vector3,
     pub body_force_n: Vector3,
     pub body_moment_nm: Vector3,
 
@@ -45,8 +45,8 @@ pub struct RigidBody{
 
 impl RigidBody{
     pub fn new(
-        local_level_force_n: [f64; 3],
-        local_level_moment_nm: [f64; 3],
+        nav_force_n: [f64; 3],
+        nav_moment_nm: [f64; 3],
         body_force_n: [f64; 3],
         body_moment_nm: [f64; 3],
         pos_m: [f64; 3],
@@ -66,8 +66,8 @@ impl RigidBody{
 
 
         return RigidBody {
-            local_level_force_n: Vector3::from_array(local_level_force_n),
-            local_level_moment_nm: Vector3::from_array(local_level_moment_nm),
+            nav_force_n: Vector3::from_array(nav_force_n),
+            nav_moment_nm: Vector3::from_array(nav_moment_nm),
             body_force_n: Vector3::from_array(body_force_n),
             body_moment_nm: Vector3::from_array(body_moment_nm),
             pos_m: Vector3::from_array(pos_m),
@@ -84,8 +84,8 @@ impl RigidBody{
 
     pub fn identity() -> RigidBody{
         return RigidBody {
-            local_level_force_n: Vector3::zeros(),
-            local_level_moment_nm: Vector3::zeros(),
+            nav_force_n: Vector3::zeros(),
+            nav_moment_nm: Vector3::zeros(),
             body_force_n: Vector3::zeros(),
             body_moment_nm: Vector3::zeros(),
             pos_m: Vector3::zeros(),
@@ -102,8 +102,8 @@ impl RigidBody{
 
     fn zeros() -> RigidBody{
         return RigidBody {
-            local_level_force_n: Vector3::zeros(),
-            local_level_moment_nm: Vector3::zeros(),
+            nav_force_n: Vector3::zeros(),
+            nav_moment_nm: Vector3::zeros(),
             body_force_n: Vector3::zeros(),
             body_moment_nm: Vector3::zeros(),
             pos_m: Vector3::zeros(),
@@ -130,12 +130,12 @@ impl Integrate for RigidBody{
         //     Forces and moments act about the body frame
 
         let total_forces_n =
-            self.local_level_force_n +
-            self.quat.transform(self.body_force_n);
+            self.body_force_n +
+            self.quat.transform(self.nav_force_n);
 
         let total_moments_nm =
-            self.local_level_moment_nm +
-            self.quat.transform(self.body_moment_nm);
+            self.body_moment_nm +
+            self.quat.transform(self.nav_moment_nm);
 
         // F = ma
         self.accel_mps2 = total_forces_n / self.mass_cg_kg;
@@ -191,6 +191,22 @@ impl Save for RigidBody{
         runtime.add_or_set("quat.c [-]", self.quat.c);
         runtime.add_or_set("quat.d [-]", self.quat.d);
 
+        let euler = self.quat.to_euler();
+        runtime.add_or_set("euler.x [rad]", euler.x);
+        runtime.add_or_set("euler.y [rad]", euler.y);
+        runtime.add_or_set("euler.z [rad]", euler.z);
+
+        let dcm = self.quat.to_dcm();
+        runtime.add_or_set("dcm.c11 [-]", dcm.c11);
+        runtime.add_or_set("dcm.c12 [-]", dcm.c12);
+        runtime.add_or_set("dcm.c13 [-]", dcm.c13);
+        runtime.add_or_set("dcm.c21 [-]", dcm.c21);
+        runtime.add_or_set("dcm.c22 [-]", dcm.c22);
+        runtime.add_or_set("dcm.c23 [-]", dcm.c23);
+        runtime.add_or_set("dcm.c31 [-]", dcm.c31);
+        runtime.add_or_set("dcm.c32 [-]", dcm.c32);
+        runtime.add_or_set("dcm.c33 [-]", dcm.c33);
+
         runtime.add_or_set("ang_vel.x [rad/s]", self.ang_vel_radps.x);
         runtime.add_or_set("ang_vel.y [rad/s]", self.ang_vel_radps.y);
         runtime.add_or_set("ang_vel.z [rad/s]", self.ang_vel_radps.z);
@@ -207,23 +223,23 @@ impl Save for RigidBody{
 
         // Force and Moments
         runtime.add_or_set(
-            "local_level_force.x [N]", self.local_level_force_n.x
+            "local_level_force.x [N]", self.nav_force_n.x
         );
         runtime.add_or_set(
-            "local_level_force.y [N]", self.local_level_force_n.y
+            "local_level_force.y [N]", self.nav_force_n.y
         );
         runtime.add_or_set(
-            "local_level_force.z [N]", self.local_level_force_n.z
+            "local_level_force.z [N]", self.nav_force_n.z
         );
 
         runtime.add_or_set(
-            "local_level_moment.x [Nm]", self.local_level_moment_nm.x
+            "local_level_moment.x [Nm]", self.nav_moment_nm.x
         );
         runtime.add_or_set(
-            "local_level_moment.y [Nm]", self.local_level_moment_nm.y
+            "local_level_moment.y [Nm]", self.nav_moment_nm.y
         );
         runtime.add_or_set(
-            "local_level_moment.z [Nm]", self.local_level_moment_nm.z
+            "local_level_moment.z [Nm]", self.nav_moment_nm.z
         );
 
         runtime.add_or_set(
@@ -290,12 +306,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn local_translation(){
+    fn body_translation(){
         let mut object = RigidBody::identity();
 
         // Set Forces
         object.pos_m = Vector3::new(0.0, 1.0, 2.0);
-        object.local_level_force_n = Vector3::new(1.0, 1.0, 1.0);
+        object.body_force_n = Vector3::new(1.0, 1.0, 1.0);
 
         let dt = 1e-4;
         let max_int = (5.0 / dt) as usize;
@@ -318,44 +334,30 @@ mod tests {
     }
 
     #[test]
-    fn local_rotation(){
+    fn body_rotation(){
 
-        for i in 0..2{
-            let mut object = RigidBody::identity();
-            let mut final_w = [0.0, 0.0, 0.0];
-            let mut final_theta = [0.0, 0.0, 0.0];
-            let mut local_level_moments_nm = [0.0, 0.0, 0.0];
+        let mut object = RigidBody::identity();
 
+        object.nav_moment_nm = Vector3::new(0.1, 0.1, 0.1);
+        object.quat = Vector3::new(0.0, 0.1, 0.2).to_quat();
 
-            final_w[i] = 0.5;
-            final_theta[i] = 1.25;
-            local_level_moments_nm[i] = 0.1;
+        let dt = 1e-3;
+        let max_int = (5.0 / dt) as i64;
 
-
-            object.quat = Quaternion::identity();
-
-            object.local_level_moment_nm = Vector3::from_array(
-                local_level_moments_nm
-            );
-
-            let dt = 0.25;
-            let max_int = (5.0 / dt) as i64;
-
-            for _ in 0..max_int{
-                object = object.rk4(dt);
-            }
-
-            // w  = w_0 + alpha*t
-            almost_equal_array(
-                &object.ang_vel_radps.to_array(),
-                &final_w
-            );
-
-            // theta = w_0 * t + alpht * t^2 / 2
-            almost_equal_array(
-                &object.quat.to_euler().to_array(),
-                &final_theta
-            );
+        for _ in 0..max_int{
+            object = object.rk4(dt);
         }
+
+        // w  = w_0 + alpha*t
+        almost_equal_array(
+            &object.ang_vel_radps.to_array(),
+            &[0.5, 0.5, 0.5]
+        );
+
+        // theta = w_0 * t + alpht * t^2 / 2
+        almost_equal_array(
+            &object.quat.to_euler().to_array(),
+            &[1.25, 1.35, 1.45]
+        );
     }
 }

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, BTreeMap};
 use std::path::Path;
 use csv;
 
@@ -75,14 +75,14 @@ impl Runtime{
     pub fn increment(&mut self){
         self.current_index += 1;
 
-        if self.current_index >= self.x_array.len() - 1{
-            self.current_index -= 1;
+        if self.current_index > self.x_array.len() - 1{
             println!(
                 "    WARNING| Max Index [{}] has been reached, \
                 current index  is [{}]",
                 self.x_array.len(),
                 self.current_index,
             );
+            self.current_index -= 1;
             self.is_running = false;
         }
         else{
@@ -160,8 +160,12 @@ impl Runtime{
         // Trim the data
         self.trim_from_curr_index();
 
+        // Sort Alphabetically
+        let sorted_datadict: BTreeMap<String, Vec<f64>> =
+            self.data_dict.clone().into_iter().collect();
+
         // Header
-        let mut header: Vec<&str> = self.data_dict.keys().map(|s| s.as_str()).collect();
+        let mut header: Vec<&str> = sorted_datadict.keys().map(|s| s.as_str()).collect();
         header.push(self.x_key.as_str());
 
         writer.write_record(&header).unwrap();
@@ -172,7 +176,7 @@ impl Runtime{
             let mut data_row: Vec<String> = Vec::new();
             for &key in header.iter(){
                 if key != self.x_key{
-                    let value = self.data_dict.get(key).unwrap();
+                    let value = sorted_datadict.get(key).unwrap();
                     let value = value[i];
                     data_row.push(
                         value.to_string()

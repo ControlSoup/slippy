@@ -1,5 +1,5 @@
 // ----------------------------------------------------------------------------
-// Strapdown Analytics for non embedded applications
+// Strapdown Analytics
 // ----------------------------------------------------------------------------
 
 // 3rd Party
@@ -11,8 +11,10 @@ use std::f64::consts::PI;
 
 use crate::strapdown::vector::Vector3;
 
+use super::quaternion::Quaternion;
+
 // ----------------------------------------------------------------------------
-// Matrix and Direction Cosines [3.2.1] Pg 3-15
+// Matrix and Direction Cosines [3.2.1, Pg 3-15]
 // ----------------------------------------------------------------------------
 
 #[derive(
@@ -28,8 +30,8 @@ use crate::strapdown::vector::Vector3;
     derive_more::Div,
     derive_more::Neg
 )]
-// Eq 3.2.1-1, Pg 3-15
 pub struct Matrix3x3{
+    // Eq 3.2.1-1, Pg 3-15
     pub c11: f64,
     pub c12: f64,
     pub c13: f64,
@@ -80,23 +82,25 @@ impl Matrix3x3{
         )
     }
 
-    pub fn norm(self) -> f64{
+    pub fn norm(&self) -> f64{
         return(
-            self.c11.powf(2.0) + self.c12.powf(2.0) + self.c13.powf(2.0) + 
-            self.c21.powf(2.0) + self.c22.powf(2.0) + self.c23.powf(2.0) + 
-            self.c31.powf(2.0) + self.c32.powf(2.0) + self.c33.powf(2.0) 
+            self.c11.powf(2.0) + self.c12.powf(2.0) + self.c13.powf(2.0)
+            + self.c21.powf(2.0) + self.c22.powf(2.0) + self.c23.powf(2.0)
+            + self.c31.powf(2.0) + self.c32.powf(2.0) + self.c33.powf(2.0)
         ).sqrt()
     }
 
-    pub fn det(self) -> f64{
+    pub fn det(&self) -> f64{
+        // Source:
+        //    https://en.wikipedia.org/wiki/Determinant
         return
-            (self.c11 * (self.c22 * self.c33 - self.c23 * self.c32)) - 
-            (self.c12 * (self.c31 * self.c33 - self.c23 * self.c31)) + 
-            (self.c13 * (self.c31 * self.c32 - self.c22 * self.c31))
-        
+            (self.c11 * (self.c22 * self.c33 - self.c23 * self.c32))
+            - (self.c12 * (self.c31 * self.c33 - self.c23 * self.c31))
+            + (self.c13 * (self.c31 * self.c32 - self.c22 * self.c31))
+
     }
 
-    pub fn adjugate(self) -> Matrix3x3{
+    pub fn adjugate(&self) -> Matrix3x3{
         // Source:
         //    https://en.wikipedia.org/wiki/Adjugate_matrix
         return Matrix3x3::new(
@@ -112,14 +116,16 @@ impl Matrix3x3{
         )
     }
 
-    pub fn inv(self) -> Option<Matrix3x3>{
+    pub fn inv(&self) -> Option<Matrix3x3>{
+        // Source:
+        //    https://en.wikipedia.org/wiki/Invertible_matrix
         if self.det() == 0.0{
             return None
         };
         return Some(self.adjugate() / self.det())
     }
 
-    pub fn to_array(self) -> [f64; 9]{
+    pub fn to_array(&self) -> [f64; 9]{
         return [
             self.c11, self.c12, self.c13,
             self.c21, self.c22, self.c23,
@@ -127,26 +133,76 @@ impl Matrix3x3{
         ]
     }
 
-    pub fn to_euler(self) -> Vector3{
+    pub fn to_euler(&self) -> Vector3{
         // Eq 3.2.3.2-1, Pg 3-34
+
         let mut euler = Vector3::zeros();
         euler.y =
             (-self.c31 / (self.c32.powf(2.0) + self.c33.powf(2.0)).sqrt()).atan();
 
-        if self.c31 < 0.999{
-            euler.z = (self.c32 / self.c33).atan();
-            euler.x = (self.c21 / self.c11).atan();
-        } else if self.c31 <= 0.999{
-            euler.x = ((self.c23 - self.c12) / (self.c13 + self.c22)).atan();
-        } else{
-            euler.x =
+        if self.c31.abs() < 0.999{
+            euler.z = (self.c21 / self.c11).atan();
+            euler.x = (self.c32 / self.c33).atan();
+        } else if self.c31 <= -0.999{
+            euler.z = ((self.c23 - self.c12) / (self.c13 + self.c22)).atan();
+        } else if self.c31 >= 0.999{
+            euler.z =
                 PI + ((self.c23 + self.c21) / (self.c13 - self.c22)).atan();
         };
 
         return euler
     }
 
-    pub fn transpose(self) -> Matrix3x3{
+    pub fn to_quat(&self) -> Quaternion{
+
+        // Eq 3.2.4.3-2, Pg 3-46
+        let tr = self.c11 + self.c22 + self.c33;
+
+        // Eq 3.2.4.3-7, Pg 3-47
+        let pa = 1.0 + tr;
+        let pb = 1.0 + (2.0 * self.c11) - tr;
+        let pc = 1.0 + (2.0 * self.c22) - tr;
+        let pd = 1.0 + (2.0 * self.c33) - tr;
+        let max_p = pa.max(pb).max(pc).max(pd);
+
+        let mut quat = Quaternion::of(404.0);
+
+        // 3.2.4.3-9, Pg 3-47
+        if pa == max_p{
+            quat.a = 0.5 * pa.sqrt();
+            quat.b = (self.c32 - self.c23) / (4.0 * quat.a);
+            quat.c = (self.c13 - self.c31) / (4.0 * quat.a);
+            quat.d = (self.c21 - self.c12) / (4.0 * quat.a);
+
+        } else if pb == max_p{
+            quat.b = 0.5 * pb.sqrt();
+            quat.c = (self.c21 + self.c12) / (4.0 * quat.b);
+            quat.d = (self.c13 + self.c31) / (4.0 * quat.b);
+            quat.a = (self.c32 - self.c23) / (4.0 * quat.b);
+
+        } else if pc == max_p{
+            quat.c = 0.5 * pc.sqrt();
+            quat.d = (self.c32 + self.c23) / (4.0 * quat.c);
+            quat.a = (self.c13 - self.c31) / (4.0 * quat.c);
+            quat.b = (self.c21 + self.c12) / (4.0 * quat.c);
+
+        } else if pd == max_p{
+            quat.d = 0.5 * pd.sqrt();
+            quat.a = (self.c21 - self.c12) / (4.0 * quat.d);
+            quat.b = (self.c13 + self.c31) / (4.0 * quat.d);
+            quat.c = (self.c32 + self.c23) / (4.0 * quat.d);
+
+        };
+
+        if quat.a <= 0.0{
+            quat = -quat;
+        };
+
+        return quat
+
+    }
+
+    pub fn transpose(&self) -> Matrix3x3{
         // Source:
         //     https://en.wikipedia.org/wiki/Transpose
         return Matrix3x3::new(
@@ -157,17 +213,20 @@ impl Matrix3x3{
     }
 
     pub fn transform(self, vec: Vector3) -> Vector3{
+        // Eq 3.1-11, Pg 3-4
         return self * vec
     }
 
     pub fn derivative(self, vec: Vector3) -> Matrix3x3{
-        // Cross product operator for the angular rate vector
+
+        // Eq 3.3.2-4, Pg 3-5
         let scew_sym = Matrix3x3::new(
-               0.0, -vec.z, vec.y,
-             vec.z,    0.0, vec.x,
-            -vec.y, -vec.x,   0.0,
+               0.0, -vec.z,  vec.y,
+             vec.z,    0.0, -vec.x,
+            -vec.y,  vec.x,    0.0,
         );
 
+        // Eq 3.3.2-9, Pg 3-53
         return self * scew_sym
     }
 
@@ -224,7 +283,7 @@ impl Mul<Vector3> for Matrix3x3{
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test::almost_equal_array; 
+    use crate::test::almost_equal_array;
 
     // Matrix Operations
 
@@ -265,7 +324,7 @@ mod tests {
         almost_equal_array(
             &(matrix * matrix2).to_array(),
             &[
-                 3000.0,  3600.0,  4200.0, 
+                 3000.0,  3600.0,  4200.0,
                  6600.0,  8100.0,  9600.0,
                 10200.0, 12600.0, 15000.0
             ]
@@ -284,8 +343,37 @@ mod tests {
         );
 
         almost_equal_array(
-            &(matrix * vector).to_array(), 
+            &(matrix * vector).to_array(),
             &[1400.0, 3200.0, 5000.0]
+        )
+    }
+
+    // DCM Conversions
+
+    #[test]
+    fn dcm_to_euler(){
+        // Identity check
+        let dcm = Matrix3x3::identity();
+        let euler = Vector3::zeros();
+
+        let dcm_to_euler = dcm.to_euler();
+
+        almost_equal_array(
+            &dcm_to_euler.to_array(),
+            &euler.to_array()
+        );
+
+    }
+
+    #[test]
+    fn dcm_to_quat(){
+        // Identity check
+        let dcm = Matrix3x3::identity();
+        let quat = Quaternion::identity();
+
+        almost_equal_array(
+            &dcm.to_quat().to_array(),
+            &quat.to_array()
         )
     }
 
@@ -309,25 +397,10 @@ mod tests {
     }
 
     #[test]
-    fn dcm_to_euler(){
-        // Identity check
-        let dcm = Matrix3x3::identity();
-        let euler = Vector3::zeros();
-
-        let dcm_to_euler = dcm.to_euler();
-
-        almost_equal_array(
-            &dcm_to_euler.to_array(),
-            &euler.to_array()
-        );
-        
-    }
-
-    #[test]
-    fn dcm_rate(){
+    fn dcm_derivative(){
         let mut dcm = Matrix3x3::identity();
         let rate = Vector3::new(0.1, 0.0, 0.0);
-        
+
         let increment = 1e-6;
         let amount = (10.0 / increment) as usize;
 
@@ -336,7 +409,7 @@ mod tests {
         }
 
         almost_equal_array(
-            &dcm.to_euler().to_array(), 
+            &dcm.to_euler().to_array(),
             &[1.0, 0.0, 0.0]
         );
     }
