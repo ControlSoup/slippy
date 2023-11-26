@@ -1,0 +1,4 @@
+GroupName: Sim Results
+Plots:
+    All:
+        x_key: 'time [s]'
