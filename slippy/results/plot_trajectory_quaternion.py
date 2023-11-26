@@ -22,6 +22,7 @@ def csv_to_datadict(file_path: str, fps, time_key='time [s]'):
 
 # Function to set the location and rotation of the object at a specific frame
 def set_object_transform(frame, obj, pos, quat):
+    obj.show_axis = True
     obj.location = pos
     obj.rotation_mode = 'QUATERNION'
     obj.rotation_quaternion = quat
@@ -47,10 +48,11 @@ for i,_ in enumerate(datadict['time [s]']):
         datadict['pos.z [m]'][i]
     ]
     quat = [
+        datadict['quat.a [-]'][i],
         datadict['quat.b [-]'][i],
         datadict['quat.c [-]'][i],
-        datadict['quat.d [-]'][i],
-        datadict['quat.a [-]'][i]
+        datadict['quat.d [-]'][i]
+        
     ]
 
     # Modify trajectory for the given frame

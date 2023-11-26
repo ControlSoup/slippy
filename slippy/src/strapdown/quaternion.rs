@@ -200,18 +200,19 @@ mod tests {
     #[test]
     fn quat_derivative(){
         let mut quat = Quaternion::identity();
-        let rate = Vector3::new(0.1, 0.0, 0.0);
 
         let increment = 1e-6;
         let amount = (10.0 / increment) as usize;
 
         for _ in 0..amount{
+            let rate = quat.transform(Vector3::new(0.1, 0.1, 0.1));
             quat += quat.derivative(rate) * increment;
         }
         almost_equal_array(
             &quat.to_euler().to_array(),
-            &[1.0, 0.0, 0.0]
+            &[1.0, 1.0, 1.0]
         );
+
 
     }
 }
