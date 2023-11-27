@@ -5,6 +5,12 @@ Plots:
         axis1:
             y_label: Pid terms
             key_list:
+                - pid_alt.error [-]
+                - pid_alt.p_term [-]
+                - pid_alt.i_term [-]
+                - pid_alt.d_term [-]
+                - pid_alt.output [-]
+
                 - pid_x.error [-]
                 - pid_x.p_term [-]
                 - pid_x.i_term [-]

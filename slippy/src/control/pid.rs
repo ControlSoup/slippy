@@ -20,13 +20,12 @@ pub struct PID{
 
 impl PID{
     pub fn new(
-        error: f64,
         kp: f64,
         ki: f64,
-        kd: f64
+        kd: f64,
     ) -> PID{
         return PID{
-            error,
+            error: 0.0,
             kp,
             ki,
             kd,
