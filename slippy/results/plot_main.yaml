@@ -1,0 +1,33 @@
+GroupName: Sim Results
+Plots:
+    pid:
+        x_key: time [s]
+        axis1:
+            y_label: Pid terms
+            key_list:
+                - pid_x.error [-]
+                - pid_x.p_term [-]
+                - pid_x.i_term [-]
+                - pid_x.d_term [-]
+                - pid_x.output [-]
+
+                - pid_y.error [-]
+                - pid_y.p_term [-]
+                - pid_y.i_term [-]
+                - pid_y.d_term [-]
+                - pid_y.output [-]
+
+                - pid_z.error [-]
+                - pid_z.p_term [-]
+                - pid_z.i_term [-]
+                - pid_z.d_term [-]
+                - pid_z.output [-]
+        axis2:
+            y_label: Moments
+            key_list:
+                - hopper.body_moment.x [Nm]
+                - hopper.body_moment.y [Nm]
+                - hopper.body_moment.z [Nm]
+
+    All:
+        x_key: 'time [s]'

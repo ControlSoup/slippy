@@ -110,7 +110,6 @@ impl Quaternion{
             return euler
         }
         if test < -0.499 * unit { // singularity at south pole
-
             euler.y = -2.0 * self.b.atan2(self.a);
             euler.z = - PI / 2.0;
             euler.x = 0.0;
@@ -196,12 +195,23 @@ mod tests {
     fn quat_to_euler(){
         // Identity
         let quat = Quaternion::identity();
-        let euler = Vector3::zeros();
 
         almost_equal_array(
             &quat.to_euler().to_array(),
-            &euler.to_array()
+            &[0.0, 0.0, 0.0]
+        );
+
+        // From example
+        // https://www.andre-gaschler.com/rotationconverter/
+
+        let quat = Quaternion::new(
+            0.25, 2.0, -0.2, 0.442699
+        );
+        almost_equal_array(
+            &quat.to_euler().to_array(),
+            &[2.7354038, 0.8700035, -2.7020736]
         )
+
     }
 
     #[test]
@@ -229,7 +239,6 @@ mod tests {
             let rate = quat.transform(Vector3::new(0.1, 0.0, 0.0));
             quat += quat.derivative(rate) * increment;
         }
-
         almost_equal_array(
             &quat.to_euler().to_array(),
             &[1.0, 0.0, 0.0]

@@ -5,6 +5,7 @@ from pandas import read_csv
 
 # Set the path to your CSV file
 csv_file_path = 'data/test.csv'
+object_name = 'body'
 
 # Function to read CSV data
 def csv_to_datadict(file_path: str, fps, time_key='time [s]'):
@@ -23,7 +24,6 @@ def csv_to_datadict(file_path: str, fps, time_key='time [s]'):
 # Function to set the location and rotation of the object at a specific frame
 def set_object_transform(frame, obj, pos, quat):
     obj.show_axis = True
-    obj.axis_length *= 2.0
     obj.location = pos
     obj.rotation_mode = 'QUATERNION'
     obj.rotation_quaternion = quat
@@ -44,15 +44,15 @@ obj = bpy.data.objects['Cube']
 for i,_ in enumerate(datadict['time [s]']):
     frame = i
     pos = [
-        datadict['pos.x [m]'][i],
-        datadict['pos.y [m]'][i],
-        datadict['pos.z [m]'][i]
+        datadict[f'{object_name}.pos.x [m]'][i],
+        datadict[f'{object_name}.pos.y [m]'][i],
+        datadict[f'{object_name}.pos.z [m]'][i]
     ]
     quat = [
-        datadict['quat.a [-]'][i],
-        datadict['quat.b [-]'][i],
-        datadict['quat.c [-]'][i],
-        datadict['quat.d [-]'][i]
+        datadict[f'{object_name}.quat.a [-]'][i],
+        datadict[f'{object_name}.quat.b [-]'][i],
+        datadict[f'{object_name}.quat.c [-]'][i],
+        datadict[f'{object_name}.quat.d [-]'][i]
     ]
 
     # Modify trajectory for the given frame

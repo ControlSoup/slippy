@@ -201,7 +201,7 @@ impl Runtime{
 
 }
 pub trait Save{
-    fn save_data(&self, node_name: String, runtime: &mut Runtime) where Self: Sized{
+    fn save_data(&self, node_name: &str, runtime: &mut Runtime) where Self: Sized{
     }
 }
 

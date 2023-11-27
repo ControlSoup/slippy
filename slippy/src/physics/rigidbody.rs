@@ -117,6 +117,30 @@ impl RigidBody{
             inv_i_tensor_cg_kgpm2: Matrix3x3::of(0.0)
         }
     }
+
+    pub fn get_pos_m(&self) -> Vector3{
+        return self.pos_m
+    }
+
+    pub fn get_vel_mps(&self) -> Vector3{
+        return self.vel_mps
+    }
+
+    pub fn get_accel_mps2(&self) -> Vector3{
+        return self.accel_mps2
+    }
+
+    pub fn get_quat(&self) -> Quaternion{
+        return self.quat
+    }
+
+    pub fn get_ang_vel_radps(&self) -> Vector3{
+        return self.ang_vel_radps
+    }
+
+    pub fn get_ang_accel_radps2(&self) -> Vector3{
+        return self.ang_accel_radps2
+    }
 }
 
 impl Integrate for RigidBody{
@@ -172,125 +196,233 @@ impl Integrate for RigidBody{
 
 
 impl Save for RigidBody{
-    fn save_data(&self, node_name: String, runtime: &mut Runtime) where Self: Sized {
+    fn save_data(&self, node_name: &str, runtime: &mut Runtime) where Self: Sized {
         // State
-        runtime.add_or_set("pos.x [m]", self.pos_m.x.clone());
-        runtime.add_or_set("pos.y [m]", self.pos_m.y.clone());
-        runtime.add_or_set("pos.z [m]", self.pos_m.z.clone());
+        runtime.add_or_set(format!(
+            "{node_name}.pos.x [m]").as_str(),
+            self.pos_m.x.clone()
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.pos.y [m]").as_str(),
+            self.pos_m.y.clone()
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.pos.z [m]").as_str(),
+            self.pos_m.z.clone()
+        );
 
-        runtime.add_or_set("vel.x [m/s]", self.vel_mps.x);
-        runtime.add_or_set("vel.y [m/s]", self.vel_mps.y);
-        runtime.add_or_set("vel.z [m/s]", self.vel_mps.z);
+        runtime.add_or_set(format!(
+            "{node_name}.vel.x [m/s]").as_str(),
+            self.vel_mps.x
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.vel.y [m/s]").as_str(),
+            self.vel_mps.y
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.vel.z [m/s]").as_str(),
+            self.vel_mps.z
+        );
 
-        runtime.add_or_set("accel.x [m/s^2]", self.accel_mps2.x);
-        runtime.add_or_set("accel.y [m/s^2]", self.accel_mps2.y);
-        runtime.add_or_set("accel.z [m/s^2]", self.accel_mps2.z);
+        runtime.add_or_set(format!(
+            "{node_name}.accel.x [m/s^2]").as_str(),
+                self.accel_mps2.x
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.accel.y [m/s^2]").as_str(),
+                self.accel_mps2.y
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.accel.z [m/s^2]").as_str(),
+                self.accel_mps2.z
+        );
 
-        runtime.add_or_set("quat.a [-]", self.quat.a);
-        runtime.add_or_set("quat.b [-]", self.quat.b);
-        runtime.add_or_set("quat.c [-]", self.quat.c);
-        runtime.add_or_set("quat.d [-]", self.quat.d);
+        runtime.add_or_set(format!(
+            "{node_name}.quat.a [-]").as_str(),
+            self.quat.a
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.quat.b [-]").as_str(),
+            self.quat.b
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.quat.c [-]").as_str(),
+            self.quat.c
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.quat.d [-]").as_str(),
+            self.quat.d
+        );
 
         let euler = self.quat.to_euler();
-        runtime.add_or_set("euler.x [rad]", euler.x);
-        runtime.add_or_set("euler.y [rad]", euler.y);
-        runtime.add_or_set("euler.z [rad]", euler.z);
+        runtime.add_or_set(format!(
+            "{node_name}.euler.x [rad]").as_str(),
+            euler.x
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.euler.y [rad]").as_str(),
+            euler.y
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.euler.z [rad]").as_str(),
+            euler.z
+        );
 
         let dcm = self.quat.to_dcm();
-        runtime.add_or_set("dcm.c11 [-]", dcm.c11);
-        runtime.add_or_set("dcm.c12 [-]", dcm.c12);
-        runtime.add_or_set("dcm.c13 [-]", dcm.c13);
-        runtime.add_or_set("dcm.c21 [-]", dcm.c21);
-        runtime.add_or_set("dcm.c22 [-]", dcm.c22);
-        runtime.add_or_set("dcm.c23 [-]", dcm.c23);
-        runtime.add_or_set("dcm.c31 [-]", dcm.c31);
-        runtime.add_or_set("dcm.c32 [-]", dcm.c32);
-        runtime.add_or_set("dcm.c33 [-]", dcm.c33);
-
-        runtime.add_or_set("ang_vel.x [rad/s]", self.ang_vel_radps.x);
-        runtime.add_or_set("ang_vel.y [rad/s]", self.ang_vel_radps.y);
-        runtime.add_or_set("ang_vel.z [rad/s]", self.ang_vel_radps.z);
-
-        runtime.add_or_set(
-            "ang_accel.x [rad/s^2]", self.ang_accel_radps2.x
+        runtime.add_or_set(format!(
+            "{node_name}.dcm.c11 [-]").as_str(),
+            dcm.c11
         );
-        runtime.add_or_set(
-            "ang_accel.y [rad/s^2]", self.ang_accel_radps2.y
+        runtime.add_or_set(format!(
+            "{node_name}.dcm.c12 [-]").as_str(),
+            dcm.c12
         );
-        runtime.add_or_set(
-            "ang_accel.z [rad/s^2]", self.ang_accel_radps2.z
+        runtime.add_or_set(format!(
+            "{node_name}.dcm.c13 [-]").as_str(),
+            dcm.c13
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.dcm.c21 [-]").as_str(),
+            dcm.c21
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.dcm.c22 [-]").as_str(),
+            dcm.c22
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.dcm.c23 [-]").as_str(),
+            dcm.c23
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.dcm.c31 [-]").as_str(),
+            dcm.c31
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.dcm.c32 [-]").as_str(),
+            dcm.c32
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.dcm.c33 [-]").as_str(),
+            dcm.c33
+        );
+
+        runtime.add_or_set(format!(
+            "{node_name}ang_vel.x [rad/s]").as_str(),
+            self.ang_vel_radps.x
+        );
+        runtime.add_or_set(format!(
+            "{node_name}ang_vel.y [rad/s]").as_str(),
+            self.ang_vel_radps.y
+        );
+        runtime.add_or_set(format!(
+            "{node_name}ang_vel.z [rad/s]").as_str(),
+            self.ang_vel_radps.z
+        );
+
+        runtime.add_or_set(format!(
+            "{node_name}.ang_accel.x [rad/s^2]").as_str(),
+            self.ang_accel_radps2.x
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.ang_accel.y [rad/s^2]").as_str(),
+            self.ang_accel_radps2.y
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.ang_accel.z [rad/s^2]").as_str(),
+            self.ang_accel_radps2.z
         );
 
         // Force and Moments
-        runtime.add_or_set(
-            "local_level_force.x [N]", self.nav_force_n.x
+        runtime.add_or_set(format!(
+            "{node_name}.nav_moment.x [N]").as_str(),
+            self.nav_force_n.x
         );
-        runtime.add_or_set(
-            "local_level_force.y [N]", self.nav_force_n.y
+        runtime.add_or_set(format!(
+            "{node_name}.nav_moment.y [N]").as_str(),
+            self.nav_force_n.y
         );
-        runtime.add_or_set(
-            "local_level_force.z [N]", self.nav_force_n.z
-        );
-
-        runtime.add_or_set(
-            "local_level_moment.x [Nm]", self.nav_moment_nm.x
-        );
-        runtime.add_or_set(
-            "local_level_moment.y [Nm]", self.nav_moment_nm.y
-        );
-        runtime.add_or_set(
-            "local_level_moment.z [Nm]", self.nav_moment_nm.z
+        runtime.add_or_set(format!(
+            "{node_name}.nav_moment.z [N]").as_str(),
+            self.nav_force_n.z
         );
 
-        runtime.add_or_set(
-            "body_force.x [N]", self.body_force_n.x
+        runtime.add_or_set(format!(
+            "{node_name}.nav_moment.x [Nm]").as_str(),
+            self.nav_moment_nm.x
         );
-        runtime.add_or_set(
-            "body_force.y [N]", self.body_force_n.y
+        runtime.add_or_set(format!(
+            "{node_name}.nav_moment.y [Nm]").as_str(),
+            self.nav_moment_nm.y
         );
-        runtime.add_or_set(
-            "body_force.z [N]", self.body_force_n.z
+        runtime.add_or_set(format!(
+            "{node_name}.nav_moment.z [Nm]").as_str(),
+            self.nav_moment_nm.z
         );
 
-        runtime.add_or_set(
-            "body_moment.x [Nm]", self.body_moment_nm.x
+        runtime.add_or_set(format!(
+            "{node_name}.body_force.x [N]").as_str(),
+            self.body_force_n.x
         );
-        runtime.add_or_set(
-            "body_moment.y [Nm]", self.body_moment_nm.y
+        runtime.add_or_set(format!(
+            "{node_name}.body_force.y [N]").as_str(),
+            self.body_force_n.y
         );
-        runtime.add_or_set(
-            "body_moment.z [Nm]", self.body_moment_nm.z
+        runtime.add_or_set(format!(
+            "{node_name}.body_force.z [N]").as_str(),
+            self.body_force_n.z
+        );
+
+        runtime.add_or_set(format!(
+            "{node_name}.body_moment.x [Nm]").as_str(),
+            self.body_moment_nm.x
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.body_moment.y [Nm]").as_str(),
+            self.body_moment_nm.y
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.body_moment.z [Nm]").as_str(),
+            self.body_moment_nm.z
         );
 
         // Mass properties
         runtime.add_or_set("mass_cg [kg]", self.mass_cg_kg);
 
-        runtime.add_or_set(
-            "Ixx [kg/m^2]", self.i_tensor_cg_kgpm2.c11
+        runtime.add_or_set(format!(
+            "{node_name}.Ixx [kg/m^2]").as_str(),
+            self.i_tensor_cg_kgpm2.c11
         );
-        runtime.add_or_set(
-            "Ixy [kg/m^2]", self.i_tensor_cg_kgpm2.c12
+        runtime.add_or_set(format!(
+            "{node_name}.Ixy [kg/m^2]").as_str(),
+            self.i_tensor_cg_kgpm2.c12
         );
-        runtime.add_or_set(
-            "Ixz [kg/m^2]", self.i_tensor_cg_kgpm2.c13
+        runtime.add_or_set(format!(
+            "{node_name}.Ixz [kg/m^2]").as_str(),
+            self.i_tensor_cg_kgpm2.c13
         );
-        runtime.add_or_set(
-            "Iyx [kg/m^2]", self.i_tensor_cg_kgpm2.c21
+        runtime.add_or_set(format!(
+            "{node_name}.Iyx [kg/m^2]").as_str(),
+            self.i_tensor_cg_kgpm2.c21
         );
-        runtime.add_or_set(
-            "Iyy [kg/m^2]", self.i_tensor_cg_kgpm2.c22
+        runtime.add_or_set(format!(
+            "{node_name}.Iyy [kg/m^2]").as_str(),
+            self.i_tensor_cg_kgpm2.c22
         );
-        runtime.add_or_set(
-            "Iyz [kg/m^2]", self.i_tensor_cg_kgpm2.c23
+        runtime.add_or_set(format!(
+            "{node_name}.Iyz [kg/m^2]").as_str(),
+            self.i_tensor_cg_kgpm2.c23
         );
-        runtime.add_or_set(
-            "Izx [kg/m^2]", self.i_tensor_cg_kgpm2.c31
+        runtime.add_or_set(format!(
+            "{node_name}.Izx [kg/m^2]").as_str(),
+            self.i_tensor_cg_kgpm2.c31
         );
-        runtime.add_or_set(
-            "Izx [kg/m^2]", self.i_tensor_cg_kgpm2.c32
+        runtime.add_or_set(format!(
+            "{node_name}.Izx [kg/m^2]").as_str(),
+            self.i_tensor_cg_kgpm2.c32
         );
-        runtime.add_or_set(
-            "Izz [kg/m^2]", self.i_tensor_cg_kgpm2.c33
+        runtime.add_or_set(format!(
+            "{node_name}.Izz [kg/m^2]").as_str(),
+            self.i_tensor_cg_kgpm2.c33
         );
     }
 }
@@ -387,7 +519,7 @@ mod tests {
             accel_mps2: Vector3::zeros(),
             quat: Vector3::new(beta, 0.0, 0.0).to_quat(),
             ang_accel_radps2: Vector3::zeros(),
-            ang_vel_radps: Vector3::new(0.0, 0.0, omega_s),
+            ang_vel_radps: Vector3::new(0.0, 0.0, omega_s + omega_s),
             mass_cg_kg: 1.0,
             i_tensor_cg_kgpm2: Matrix3x3::identity(),
             inv_i_tensor_cg_kgpm2: Matrix3x3::identity()
@@ -395,6 +527,7 @@ mod tests {
 
         let mut runtime = Runtime::new(10.0, 1e-3, "time [s]");
         let dt = runtime.get_dx();
+        let init_euler = uut.quat.to_euler();
 
         while runtime.is_running{
             // Update spin cone velocity
@@ -404,27 +537,29 @@ mod tests {
             uut.ang_vel_radps = omega_s_vec + omega_c_vec;
 
             uut = uut.rk4(dt);
-            uut.save_data("test".to_string(), &mut runtime);
+            uut.save_data("uut", &mut runtime);
             runtime.increment();
         }
 
         runtime.export_to_csv("spin_cone", "results/data");
-        let uut_dcm = uut.quat.to_dcm();
-        let end_phi =
-            (omega_s - (omega_c * beta.cos())) * runtime.get_max_x();
-        let end_theta = (PI / 2.0) - beta;
-        let end_psi = -omega_c * runtime.get_max_x();
 
-        panic!(
-            "\n\n{:?}\n\n{:?}\n\n",
-            uut_dcm,
-            Vector3::new(end_psi, end_theta, end_phi).to_dcm()
-        );
+        let end_psi = -omega_c * runtime.get_max_x();
+        let end_theta = (PI / 2.0) - beta;
+        let end_phi = (omega_s - (omega_c * beta.cos()))
+            * runtime.get_max_x()
+            + init_euler.z;
+
         // Eq 11.2.1.1-7
         almost_equal_array(
             &Vector3::new(end_psi, end_theta, end_phi).to_dcm().to_array(),
             &uut.quat.to_dcm().to_array()
         );
+    }
+
+    #[test]
+    fn spin_rock_size_simulator(){
+        // SPIN-ROCK-SIZE SIMULATOR
+        // Section 11.2.3, Pg 11-27 from strapdown analytics
 
     }
 }

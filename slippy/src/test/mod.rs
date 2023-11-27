@@ -9,6 +9,7 @@ pub fn almost_equal_array(array1: &[f64], array2: &[f64]){
     }
 
     for (i, value) in array1.iter().enumerate(){
+        println!("Current Test Index: {i}");
         assert_relative_eq!(
             *value,
             array2[i],
