@@ -10,7 +10,7 @@ impl Ramp{
     pub fn new(start_value: f64, target: f64, rate: f64) -> Ramp{
         return Ramp{
             target,
-            rate,
+            rate: rate.abs(),
             current_value: start_value
         }
     }
