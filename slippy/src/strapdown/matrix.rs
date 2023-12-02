@@ -230,6 +230,11 @@ impl Matrix3x3{
         return self * scew_sym
     }
 
+    pub fn error(self, target: Matrix3x3) -> Matrix3x3{
+        return target - self
+    }
+
+
 }
 
 // ----------------------------------------------------------------------------

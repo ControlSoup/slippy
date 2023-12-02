@@ -63,6 +63,21 @@ impl Quaternion{
         return Quaternion::new(self.a, -self.b, -self.c, -self.d)
     }
 
+    pub fn transform(self, vec: Vector3) -> Vector3{
+        // w = uvu*
+        let quat = (self * vec) * self.conjugate();
+        return Vector3::new(quat.b, quat.c, quat.d)
+    }
+
+    pub fn derivative(self, vec: Vector3) -> Quaternion{
+        // q_dot = q * w / 2.0
+        return self * vec / 2.0
+    }
+
+    pub fn error(&self, target: Quaternion) -> Quaternion{
+        return target * self.conjugate()
+    }
+
     pub fn to_dcm(&self) -> Matrix3x3{
         let _c11 =
             self.a.powf(2.0)
@@ -123,16 +138,6 @@ impl Quaternion{
         return euler
     }
 
-    pub fn transform(self, vec: Vector3) -> Vector3{
-        // w = uvu*
-        let quat = (self * vec) * self.conjugate();
-        return Vector3::new(quat.b, quat.c, quat.d)
-    }
-
-    pub fn derivative(self, vec: Vector3) -> Quaternion{
-        // q_dot = q * w / 2.0
-        return self * vec / 2.0
-    }
 }
 
 impl Mul<Vector3> for Quaternion{

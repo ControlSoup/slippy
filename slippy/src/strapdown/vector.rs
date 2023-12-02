@@ -81,6 +81,10 @@ impl Vector3{
         )
     }
 
+    pub fn error(self, target: Vector3) -> Vector3{
+        return target - self
+    }
+
     pub fn to_dcm(self) -> Matrix3x3{
         // Eq 3.2.3.1-1, Pg 3-33
         let _c11 = self.y.cos() * self.x.cos();

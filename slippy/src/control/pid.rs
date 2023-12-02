@@ -1,12 +1,12 @@
-use crate::sim::{runtime::{Runtime, Save}};
+use crate::sim::runtime::{Runtime, Save};
 
 #[derive(
     Debug,
     Clone
 )]
 
-// Verbose PID for gain tuning and debuggin
 pub struct PID{
+    pub setpoint: f64,
     error: f64,
     kp: f64,
     ki: f64,
@@ -23,8 +23,10 @@ impl PID{
         kp: f64,
         ki: f64,
         kd: f64,
+        setpoint: f64
     ) -> PID{
         return PID{
+            setpoint,
             error: 0.0,
             kp,
             ki,
@@ -37,14 +39,14 @@ impl PID{
         }
     }
 
-    pub fn ouput(&mut self, error: f64, dt: f64) -> f64{
+    pub fn ouput(&mut self, process_value: f64, dt: f64) -> f64{
 
         // Simple PID
-        self.error = error;
-        self.p_term = self.kp * error;
-        self.i_term += self.ki * error * dt;
-        self.d_term = self.kd * (error - self.last_error / dt);
-        self.last_error = error;
+        self.error = self.setpoint - process_value;
+        self.p_term = self.kp * self.error;
+        self.i_term += self.ki * self.error * dt;
+        self.d_term = self.kd * (self.error - self.last_error / dt);
+        self.last_error = self.error;
 
         self.ouput = self.p_term + self.i_term + self.d_term;
         return self.ouput
@@ -53,6 +55,25 @@ impl PID{
 
 impl Save for PID{
     fn save_data(&self, node_name: &str, runtime: &mut Runtime) where Self: Sized {
+
+        runtime.add_or_set(format!(
+            "{node_name}.setpoint [-]").as_str(),
+            self.setpoint,
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.output [-]").as_str(),
+            self.ouput,
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.error [-]").as_str(),
+            self.error,
+        );
+    }
+
+    fn save_data_verbose(&self, node_name: &str, runtime: &mut Runtime) where Self: Sized {
+        self.save_data(node_name, runtime);
+
+        // Gains
         runtime.add_or_set(format!(
             "{node_name}.kp [-]").as_str(),
             self.kp,
@@ -66,14 +87,7 @@ impl Save for PID{
             self.kd,
         );
 
-        runtime.add_or_set(format!(
-            "{node_name}.output [-]").as_str(),
-            self.ouput,
-        );
-        runtime.add_or_set(format!(
-            "{node_name}.error [-]").as_str(),
-            self.error,
-        );
+        // Indiviual Contributions
         runtime.add_or_set(format!(
             "{node_name}.p_term [-]").as_str(),
             self.p_term,
@@ -86,5 +100,6 @@ impl Save for PID{
             "{node_name}.d_term [-]").as_str(),
             self.d_term,
         );
+
     }
 }

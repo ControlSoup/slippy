@@ -254,57 +254,6 @@ impl Save for RigidBody{
             self.quat.d
         );
 
-        let euler = self.quat.to_euler();
-        runtime.add_or_set(format!(
-            "{node_name}.euler.x [rad]").as_str(),
-            euler.x
-        );
-        runtime.add_or_set(format!(
-            "{node_name}.euler.y [rad]").as_str(),
-            euler.y
-        );
-        runtime.add_or_set(format!(
-            "{node_name}.euler.z [rad]").as_str(),
-            euler.z
-        );
-
-        let dcm = self.quat.to_dcm();
-        runtime.add_or_set(format!(
-            "{node_name}.dcm.c11 [-]").as_str(),
-            dcm.c11
-        );
-        runtime.add_or_set(format!(
-            "{node_name}.dcm.c12 [-]").as_str(),
-            dcm.c12
-        );
-        runtime.add_or_set(format!(
-            "{node_name}.dcm.c13 [-]").as_str(),
-            dcm.c13
-        );
-        runtime.add_or_set(format!(
-            "{node_name}.dcm.c21 [-]").as_str(),
-            dcm.c21
-        );
-        runtime.add_or_set(format!(
-            "{node_name}.dcm.c22 [-]").as_str(),
-            dcm.c22
-        );
-        runtime.add_or_set(format!(
-            "{node_name}.dcm.c23 [-]").as_str(),
-            dcm.c23
-        );
-        runtime.add_or_set(format!(
-            "{node_name}.dcm.c31 [-]").as_str(),
-            dcm.c31
-        );
-        runtime.add_or_set(format!(
-            "{node_name}.dcm.c32 [-]").as_str(),
-            dcm.c32
-        );
-        runtime.add_or_set(format!(
-            "{node_name}.dcm.c33 [-]").as_str(),
-            dcm.c33
-        );
 
         runtime.add_or_set(format!(
             "{node_name}ang_vel.x [rad/s]").as_str(),
@@ -388,6 +337,13 @@ impl Save for RigidBody{
         // Mass properties
         runtime.add_or_set("mass_cg [kg]", self.mass_cg_kg);
 
+    }
+
+    fn save_data_verbose(&self, node_name: &str, runtime: &mut Runtime) where Self: Sized {
+
+        self.save_data(node_name, runtime);
+
+        // Moment of intertia
         runtime.add_or_set(format!(
             "{node_name}.Ixx [kg/m^2]").as_str(),
             self.i_tensor_cg_kgpm2.c11
@@ -423,6 +379,59 @@ impl Save for RigidBody{
         runtime.add_or_set(format!(
             "{node_name}.Izz [kg/m^2]").as_str(),
             self.i_tensor_cg_kgpm2.c33
+        );
+
+        // Attitude conversion
+        let euler = self.quat.to_euler();
+        runtime.add_or_set(format!(
+            "{node_name}.euler.x [rad]").as_str(),
+            euler.x
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.euler.y [rad]").as_str(),
+            euler.y
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.euler.z [rad]").as_str(),
+            euler.z
+        );
+
+        let dcm = self.quat.to_dcm();
+        runtime.add_or_set(format!(
+            "{node_name}.dcm.c11 [-]").as_str(),
+            dcm.c11
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.dcm.c12 [-]").as_str(),
+            dcm.c12
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.dcm.c13 [-]").as_str(),
+            dcm.c13
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.dcm.c21 [-]").as_str(),
+            dcm.c21
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.dcm.c22 [-]").as_str(),
+            dcm.c22
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.dcm.c23 [-]").as_str(),
+            dcm.c23
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.dcm.c31 [-]").as_str(),
+            dcm.c31
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.dcm.c32 [-]").as_str(),
+            dcm.c32
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.dcm.c33 [-]").as_str(),
+            dcm.c33
         );
     }
 }

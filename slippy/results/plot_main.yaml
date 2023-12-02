@@ -1,3 +1,5 @@
+DataPath: data/test.csv
+
 GroupName: Sim Results
 Plots:
     pid:

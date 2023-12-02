@@ -201,7 +201,12 @@ impl Runtime{
 
 }
 pub trait Save{
-    fn save_data(&self, node_name: &str, runtime: &mut Runtime) where Self: Sized{
+    fn save_data(&self, node_name: &str, runtime: &mut Runtime) where Self: Sized;
+
+    fn save_data_verbose(&self, node_name: &str, runtime: &mut Runtime) where Self: Sized{
+        // Allow one call for verbose and non verbose data
+        self.save_data(node_name, runtime);
+        return ()
     }
 }
 
