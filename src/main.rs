@@ -48,6 +48,7 @@ fn main() {
     let mut test_sensor = BasicSensor::new_simple_from_variance(0.01);
 
     while runtime.is_running{
+
         // Instrumentation update
         test_sensor.output(test_object.get_pos_m().z);
 
