@@ -36,6 +36,3 @@ Plots:
                 - hopper.body_moment.x [Nm]
                 - hopper.body_moment.y [Nm]
                 - hopper.body_moment.z [Nm]
-
-    All:
-        x_key: 'time [s]'

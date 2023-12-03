@@ -368,6 +368,18 @@ mod tests {
             &euler.to_array()
         );
 
+        // From Example
+        let dcm = Matrix3x3::new(
+            0.9640719, -0.2461680,  0.0998334,
+            0.2590810,  0.9543416, -0.1486916,
+            -0.0586721,  0.1692143,  0.9838313
+        );
+
+        almost_equal_array(
+            &[0.15, 0.1, 0.25],
+            &dcm.to_euler().to_array()
+        )
+
     }
 
     #[test]
