@@ -381,21 +381,7 @@ impl Save for RigidBody{
             self.i_tensor_cg_kgpm2.c33
         );
 
-        // Attitude conversion
-        let euler = self.quat_b2i.to_euler();
-        runtime.add_or_set(format!(
-            "{node_name}.euler.x [rad]").as_str(),
-            euler.x
-        );
-        runtime.add_or_set(format!(
-            "{node_name}.euler.y [rad]").as_str(),
-            euler.y
-        );
-        runtime.add_or_set(format!(
-            "{node_name}.euler.z [rad]").as_str(),
-            euler.z
-        );
-
+        // Dcm representation
         let dcm = self.quat_b2i.to_dcm();
         runtime.add_or_set(format!(
             "{node_name}.dcm.c11 [-]").as_str(),
@@ -432,6 +418,21 @@ impl Save for RigidBody{
         runtime.add_or_set(format!(
             "{node_name}.dcm.c33 [-]").as_str(),
             dcm.c33
+        );
+
+        // Attitude conversion
+        let euler = dcm.to_euler();
+        runtime.add_or_set(format!(
+            "{node_name}.euler.x [rad]").as_str(),
+            euler.x
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.euler.y [rad]").as_str(),
+            euler.y
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.euler.z [rad]").as_str(),
+            euler.z
         );
     }
 }
