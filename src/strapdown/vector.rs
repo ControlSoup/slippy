@@ -116,20 +116,7 @@ impl Vector3{
     }
 
     pub fn to_quat(self)-> Quaternion{
-        let cr = (self.x * 0.5).cos();
-        let sr = (self.x * 0.5).sin();
-        let cp = (self.y * 0.5).cos();
-        let sp = (self.y * 0.5).sin();
-        let cy = (self.z * 0.5).cos();
-        let sy = (self.z * 0.5).sin();
-
-        return Quaternion::new(
-            cr * cp * cy + sr * sp * sy,
-            sr * cp * cy - cr * sp * sy,
-            cr * sp * cy + sr * cp * sy,
-            cr * cp * sy - sr * sp * cy
-        )
-
+        return self.to_dcm().to_quat()
     }
 }
 
@@ -182,8 +169,7 @@ mod tests {
         almost_equal_array(
             &dcm.to_array(),
             &euler_to_dcm.to_array()
-        )
-
+        );
     }
 
     #[test]
@@ -195,6 +181,6 @@ mod tests {
         almost_equal_array(
             &euler.to_quat().to_array(),
             &quat.to_array()
-        )
+        );
     }
 }

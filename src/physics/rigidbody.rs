@@ -382,7 +382,7 @@ impl Save for RigidBody{
         );
 
         // Attitude conversion
-        let euler = self.quat_b2i.to_dcm().to_euler();
+        let euler = self.quat_b2i.to_euler();
         runtime.add_or_set(format!(
             "{node_name}.euler.x [rad]").as_str(),
             euler.x
@@ -454,7 +454,11 @@ mod tests {
         let mut object = RigidBody::identity();
 
         // Set Forces
-        object.quat_b2i = Vector3::new(0.0, PI / 2.0,0.0).to_quat();
+        object.quat_b2i = Matrix3x3::new(
+            0.0, 0.0, 1.0,
+            0.0, 1.0, 0.0,
+            -1.0, 0.0, 0.0
+        ).to_quat();
         object.inertial_pos_m = Vector3::new(0.0, 1.0, 2.0);
         object.body_force_n = Vector3::new(1.0, 1.0, 1.0);
 
@@ -514,8 +518,8 @@ mod tests {
         // Section: 11.2.1, Pg 11-12
 
         let beta = 0.25; // Precessional axis angle
-        let omega_s = 0.1; // Intertial rotation rate
-        let omega_c = 0.15; // Intertial precessional rate
+        let omega_s = 0.025; // Intertial rotation rate
+        let omega_c = 0.03; // Intertial precessional rate
 
         // Use an identity intertia tensor and mass
         let mut uut = RigidBody{
@@ -554,7 +558,8 @@ mod tests {
 
         runtime.export_to_csv("spin_cone", "results/data");
 
-        let end_psi = -omega_c * runtime.get_max_x();
+        // Strapdown uses Z-Y-X, I use X-Y-Z
+        let end_psi = -omega_c * runtime.get_x();
         let end_theta = (PI / 2.0) - beta;
         let end_phi = (omega_s - (omega_c * beta.cos()))
             * runtime.get_max_x()
@@ -563,7 +568,7 @@ mod tests {
         // Eq 11.2.1.1-7
         almost_equal_array(
             &uut.quat_b2i.to_euler().to_array(),
-            &Vector3::new(end_psi, end_theta, end_phi).to_array()
+            &Vector3::new(end_phi, end_theta, end_psi).to_array()
         );
     }
 

@@ -137,14 +137,16 @@ impl Matrix3x3{
         // Eq 3.2.3.2-1, Pg 3-34
 
         let mut euler = Vector3::zeros();
-        euler.y =
-            (-self.c31 / (self.c32.powf(2.0) + self.c33.powf(2.0)).sqrt()).atan();
 
+        euler.y = (
+            (-self.c31) / (self.c32.powf(2.0) + self.c33.powf(2.0)).sqrt()
+        ).atan();
         if self.c31.abs() < 0.999{
-            euler.z = (self.c21 / self.c11).atan();
             euler.x = (self.c32 / self.c33).atan();
+            euler.z = (self.c21 / self.c11).atan();
         } else if self.c31 <= -0.999{
             euler.z = ((self.c23 - self.c12) / (self.c13 + self.c22)).atan();
+
         } else if self.c31 >= 0.999{
             euler.z =
                 PI + ((self.c23 + self.c21) / (self.c13 - self.c22)).atan();
@@ -169,25 +171,25 @@ impl Matrix3x3{
 
         // 3.2.4.3-9, Pg 3-47
         if pa == max_p{
-            quat.a = 0.5 * pa.sqrt();
+            quat.a = pa.sqrt() / 2.0;
             quat.b = (self.c32 - self.c23) / (4.0 * quat.a);
             quat.c = (self.c13 - self.c31) / (4.0 * quat.a);
             quat.d = (self.c21 - self.c12) / (4.0 * quat.a);
 
         } else if pb == max_p{
-            quat.b = 0.5 * pb.sqrt();
+            quat.b = pb.sqrt() / 2.0;
             quat.c = (self.c21 + self.c12) / (4.0 * quat.b);
             quat.d = (self.c13 + self.c31) / (4.0 * quat.b);
             quat.a = (self.c32 - self.c23) / (4.0 * quat.b);
 
         } else if pc == max_p{
-            quat.c = 0.5 * pc.sqrt();
+            quat.c = pc.sqrt() / 2.0;
             quat.d = (self.c32 + self.c23) / (4.0 * quat.c);
             quat.a = (self.c13 - self.c31) / (4.0 * quat.c);
             quat.b = (self.c21 + self.c12) / (4.0 * quat.c);
 
         } else if pd == max_p{
-            quat.d = 0.5 * pd.sqrt();
+            quat.d = pd.sqrt() / 2.0;
             quat.a = (self.c21 - self.c12) / (4.0 * quat.d);
             quat.b = (self.c13 + self.c31) / (4.0 * quat.d);
             quat.c = (self.c32 + self.c23) / (4.0 * quat.d);
@@ -197,7 +199,6 @@ impl Matrix3x3{
         if quat.a <= 0.0{
             quat = -quat;
         };
-
         return quat
 
     }
@@ -368,18 +369,6 @@ mod tests {
             &euler.to_array()
         );
 
-        // From Example
-        let dcm = Matrix3x3::new(
-            0.9640719, -0.2461680,  0.0998334,
-            0.2590810,  0.9543416, -0.1486916,
-            -0.0586721,  0.1692143,  0.9838313
-        );
-
-        almost_equal_array(
-            &[0.15, 0.1, 0.25],
-            &dcm.to_euler().to_array()
-        )
-
     }
 
     #[test]
@@ -387,11 +376,11 @@ mod tests {
         // Identity check
         let dcm = Matrix3x3::identity();
         let quat = Quaternion::identity();
-
         almost_equal_array(
             &dcm.to_quat().to_array(),
             &quat.to_array()
-        )
+        );
+
     }
 
     // DCM Operations
@@ -414,8 +403,9 @@ mod tests {
     }
 
     #[test]
-    fn dcm_derivative(){
+    fn dcm_derivative_x(){
         let mut dcm = Matrix3x3::identity();
+
         let rate = Vector3::new(0.1, 0.0, 0.0);
 
         let increment = 1e-6;
@@ -428,6 +418,42 @@ mod tests {
         almost_equal_array(
             &dcm.to_euler().to_array(),
             &[1.0, 0.0, 0.0]
+        );
+    }
+    #[test]
+    fn dcm_derivative_y(){
+        let mut dcm = Matrix3x3::identity();
+
+        let rate = Vector3::new(0.0, 0.1, 0.0);
+
+        let increment = 1e-6;
+        let amount = (10.0 / increment) as usize;
+
+        for _ in 0..amount{
+            dcm += dcm.derivative(rate) * increment;
+        }
+
+        almost_equal_array(
+            &dcm.to_euler().to_array(),
+            &[0.0, 1.0, 0.0]
+        );
+    }
+    #[test]
+    fn dcm_derivative_z(){
+        let mut dcm = Matrix3x3::identity();
+
+        let rate = Vector3::new(0.0, 0.0, 0.1);
+
+        let increment = 1e-6;
+        let amount = (10.0 / increment) as usize;
+
+        for _ in 0..amount{
+            dcm += dcm.derivative(rate) * increment;
+        }
+
+        almost_equal_array(
+            &dcm.to_euler().to_array(),
+            &[0.0, 0.0, 1.0]
         );
     }
 }

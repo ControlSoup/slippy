@@ -25,25 +25,12 @@ impl BasicSensor{
         }
     }
 
-    pub fn new_variance(
-        variance: f64,
-        output_slope: f64,
-        output_offset: f64
-    ) -> BasicSensor{
-        return BasicSensor {
-            std: variance.sqrt(),
-            measured_value: 0.0,
-            output_slope,
-            output_offset
-        }
-    }
-
     pub fn new_simple_from_std(std:f64) -> BasicSensor{
         return BasicSensor::new_std(std, 1.0, 0.0)
     }
 
     pub fn new_simple_from_variance(variance: f64) -> BasicSensor{
-        return BasicSensor::new_variance(variance, 1.0, 0.0)
+        return BasicSensor::new_std(variance.sqrt(), 1.0, 0.0)
     }
 
     pub fn output(&mut self, actual_value: f64) -> f64{

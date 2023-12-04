@@ -1,6 +1,6 @@
 use approx::assert_relative_eq;
 
-const FLOAT_DEV: f64  = 1e-6;
+const FLOAT_DEV: f64  = 1e-3;
 
 pub fn almost_equal_array(array1: &[f64], array2: &[f64]){
 

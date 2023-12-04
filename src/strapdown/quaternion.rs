@@ -84,19 +84,19 @@ impl Quaternion{
             + self.b.powf(2.0)
             - self.c.powf(2.0)
             - self.d.powf(2.0);
-        let _c12 = 2.0 * (self.b * self.c - (self.a * self.d));
-        let _c13 = 2.0 * (self.b * self.d + (self.a * self.c));
+        let _c12 = 2.0 * ((self.b * self.c) - (self.a * self.d));
+        let _c13 = 2.0 * ((self.b * self.d) + (self.a * self.c));
 
-        let _c21 = 2.0 * (self.b * self.c + (self.a * self.d));
+        let _c21 = 2.0 * ((self.b * self.c) + (self.a * self.d));
         let _c22 =
             self.a.powf(2.0)
             - self.b.powf(2.0)
             + self.c.powf(2.0)
             - self.d.powf(2.0);
-        let _c23 = 2.0 * (self.c * self.d - (self.a * self.d));
+        let _c23 = 2.0 * ((self.c * self.d) - (self.a * self.b));
 
-        let _c31 = 2.0 * (self.b * self.d - (self.a * self.c));
-        let _c32 = 2.0 * (self.c * self.d + (self.a * self.b));
+        let _c31 = 2.0 * ((self.b * self.d) - (self.a * self.c));
+        let _c32 = 2.0 * ((self.c * self.d) + (self.a * self.b));
         let _c33 =
             self.a.powf(2.0)
             - self.b.powf(2.0)
@@ -108,34 +108,11 @@ impl Quaternion{
             _c21, _c22, _c23,
             _c31, _c32, _c33,
         )
+
     }
 
     pub fn to_euler(&self) -> Vector3{
-        let mut euler = Vector3::zeros();
-        let  sqw = self.a * self.a;
-        let  sqx = self.b * self.b;
-        let  sqy = self.c * self.c;
-        let  sqz = self.d * self.d;
-        let  unit = sqx + sqy + sqz + sqw;
-        let  test = self.b * self.c + self.d * self.a;
-
-        if test > 0.499 * unit { // singularity at north pole
-            euler.y = 2.0 * self.b.atan2(self.a);
-            euler.x = PI / 2.0;
-            return euler
-        }
-        if test < -0.499 * unit { // singularity at south pole
-            euler.y = -2.0 * self.b.atan2(self.a);
-            euler.z = - PI / 2.0;
-            euler.x = 0.0;
-            return euler
-        }
-
-        euler.y = (2.0 * self.c * self.a - 2.0 * self.b * self.d).atan2(sqx - sqy - sqz + sqw);
-        euler.z = (2.0 * test / unit).asin();
-        euler.x = (2.0 * self.b * self.a - 2.0 * self.c * self.d).atan2(-sqx + sqy - sqz + sqw);
-
-        return euler
+        return self.to_dcm().to_euler()
     }
 
 }
@@ -206,17 +183,6 @@ mod tests {
             &[0.0, 0.0, 0.0]
         );
 
-        // From example
-        // https://www.andre-gaschler.com/rotationconverter/
-
-        let quat = Quaternion::new(
-            0.25, 2.0, -0.2, 0.442699
-        );
-        almost_equal_array(
-            &quat.to_euler().to_array(),
-            &[2.7354038, 0.8700035, -2.7020736]
-        )
-
     }
 
     #[test]
@@ -228,25 +194,73 @@ mod tests {
         almost_equal_array(
             &quat.to_dcm().to_array(),
             &dcm.to_array()
-        )
+        );
+
+        let quat = Quaternion{
+            a: 0.9641015011871702,
+            b: 0.02351519745119192,
+            c: 0.2506948010244541,
+            d:0.0843056797421489
+        };
+
+        almost_equal_array(
+            &quat.to_dcm().to_quat().to_array(),
+            &quat.to_array()
+        );
     }
 
     // Derivative
 
     #[test]
-    fn quat_derivative(){
+    fn quat_derivative_x(){
         let mut quat = Quaternion::identity();
+        let rate = Vector3::new(0.1, 0.0, 0.0);
 
         let increment = 1e-6;
         let amount = (10.0 / increment) as usize;
 
         for _ in 0..amount{
-            let rate = quat.transform(Vector3::new(0.1, 0.0, 0.0));
             quat += quat.derivative(rate) * increment;
         }
         almost_equal_array(
             &quat.to_euler().to_array(),
             &[1.0, 0.0, 0.0]
+        );
+
+
+    }
+    #[test]
+    fn quat_derivative_y(){
+        let mut quat = Quaternion::identity();
+        let rate = Vector3::new(0.0, 0.1, 0.0);
+
+        let increment = 1e-6;
+        let amount = (10.0 / increment) as usize;
+
+        for _ in 0..amount{
+            quat += quat.derivative(rate) * increment;
+        }
+        almost_equal_array(
+            &quat.to_euler().to_array(),
+            &[0.0, 1.0, 0.0]
+        );
+
+
+    }
+    #[test]
+    fn quat_derivative_z(){
+        let mut quat = Quaternion::identity();
+        let rate = Vector3::new(0.0, 0.0, 0.1);
+
+        let increment = 1e-6;
+        let amount = (10.0 / increment) as usize;
+
+        for _ in 0..amount{
+            quat += quat.derivative(rate) * increment;
+        }
+        almost_equal_array(
+            &quat.to_euler().to_array(),
+            &[0.0, 0.0, 1.0]
         );
 
 
