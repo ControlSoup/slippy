@@ -22,7 +22,7 @@ impl BangBang{
         }
     }
 
-    pub fn ouput(&mut self, process_value: f64, dt: f64) -> bool{
+    pub fn output(&mut self, process_value: f64, dt: f64) -> bool{
 
         // Simple Bang Bang
         self.error = self.setpoint - process_value;

@@ -55,7 +55,6 @@ impl PID{
 
 impl Save for PID{
     fn save_data(&self, node_name: &str, runtime: &mut Runtime) where Self: Sized {
-
         runtime.add_or_set(format!(
             "{node_name}.setpoint [-]").as_str(),
             self.setpoint,

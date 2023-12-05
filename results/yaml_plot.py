@@ -309,7 +309,7 @@ def main():
     # Plot the files
     fig_list = figs_from_yaml(group_name, plot_dict, datadict)
 
-    # Output
+    # output
     output_fig_list(fig_list, output_path)
 
 if __name__ == '__main__':

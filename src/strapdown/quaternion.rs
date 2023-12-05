@@ -118,7 +118,7 @@ impl Quaternion{
 }
 
 impl Mul<Vector3> for Quaternion{
-    type Output = Quaternion;
+    type output = Quaternion;
     fn mul(self, vec: Vector3) -> Quaternion{
         // Eq 3.2.4-10, Pg 3-41 (Simplifed form)
         return Quaternion::new(
@@ -131,7 +131,7 @@ impl Mul<Vector3> for Quaternion{
 }
 
 impl Mul<Quaternion> for Quaternion{
-    type Output = Quaternion;
+    type output = Quaternion;
     fn mul(self, quat: Quaternion) -> Quaternion{
         // Eq 3.2.4-10, Pg 3-41
         return Quaternion::new(
