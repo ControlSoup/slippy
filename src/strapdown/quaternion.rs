@@ -5,10 +5,9 @@
 // 3rd Party
 use std::ops::Mul;
 use derive_more;
-use std::f64::consts::PI;
 
 // Crate
-use super::{vector::Vector3, matrix::Matrix3x3};
+use super::{Vector3, Matrix3x3};
 
 // ----------------------------------------------------------------------------
 // Quaternions [3.24, Pg 3-38]
@@ -118,7 +117,7 @@ impl Quaternion{
 }
 
 impl Mul<Vector3> for Quaternion{
-    type output = Quaternion;
+    type Output = Quaternion;
     fn mul(self, vec: Vector3) -> Quaternion{
         // Eq 3.2.4-10, Pg 3-41 (Simplifed form)
         return Quaternion::new(
@@ -131,7 +130,7 @@ impl Mul<Vector3> for Quaternion{
 }
 
 impl Mul<Quaternion> for Quaternion{
-    type output = Quaternion;
+    type Output = Quaternion;
     fn mul(self, quat: Quaternion) -> Quaternion{
         // Eq 3.2.4-10, Pg 3-41
         return Quaternion::new(

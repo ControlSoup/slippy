@@ -29,20 +29,17 @@ impl Ramp{
 impl sim::Save for Ramp{
     fn save_data(&self, node_name: &str, runtime: &mut sim::Runtime) where Self: Sized {
         runtime.add_or_set(format!(
-            "{node_name}.current_value [-]").as_str(),
-            self.current_value
+            "{node_name}.current_value [-]").as_str(),self.current_value
         );
     }
 
     fn save_data_verbose(&self, node_name: &str, runtime: &mut sim::Runtime) where Self: Sized {
         self.save_data(node_name, runtime);
         runtime.add_or_set(format!(
-            "{node_name}.target [-]").as_str(),
-            self.target
+            "{node_name}.target [-]").as_str(),self.target
         );
         runtime.add_or_set(format!(
-            "{node_name}.rate [-]").as_str(),
-            self.rate
+            "{node_name}.rate [-]").as_str(),self.rate
         );
 
     }
