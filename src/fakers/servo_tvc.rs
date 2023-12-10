@@ -1,4 +1,4 @@
-use crate::geometry::d2;
+use crate::geometry;
 
 pub struct ServoTVC{
     servo_start_x: f64,
@@ -34,14 +34,14 @@ impl ServoTVC{
             servo_end_x,
             servo_end_y,
             servo_angle_rad:
-                angle_from_y_rad(
+                geometry::d2::angle_from_y_rad(
                     &servo_start_x,
                     &servo_start_y,
                     &servo_end_x,
                     &servo_end_y
                 ),
             servo_joint_radius:
-                length_from_points(
+                geometry::d2::length_from_points(
                     &servo_start_x,
                     &servo_start_y,
                     &servo_end_x,
@@ -52,21 +52,21 @@ impl ServoTVC{
             tvc_end_x,
             tvc_end_y,
             tvc_angle_rad:
-                d2::angle_from_y_rad(
+                geometry::d2::angle_from_y_rad(
                     &tvc_start_x,
                     &tvc_start_y,
                     &tvc_end_x,
                     &tvc_end_y
                 ),
             tvc_joint_radius:
-                d2::length_from_points(
+                geometry::d2::length_from_points(
                     &tvc_start_x,
                     &tvc_start_y,
                     &tvc_end_x,
                     &tvc_end_y
                 ),
             connection_length:
-                d2::length_from_points(
+                geometry::d2::length_from_points(
                     &servo_end_x,
                     &servo_end_y,
                     &tvc_end_x,
@@ -107,7 +107,7 @@ impl ServoTVC{
         self.servo_end_x = self.servo_end_x + (self.servo_joint_radius * self.servo_angle_rad.cos());
         self.servo_end_y = self.servo_end_y + (self.servo_joint_radius * self.servo_angle_rad.sin());
 
-        let distance_between_centers = length_from_points(
+        let distance_between_centers = geometry::d2::length_from_points(
             &self.tvc_start_x,
             &self.tvc_end_y,
             &self.servo_end_x,
@@ -115,8 +115,8 @@ impl ServoTVC{
         );
 
         // Law of cosines and solve for missing tvc angle
-        let numer = self.tvc_joint_radius.powf(2.0) + self.connection_length.powf(2.0) - distance_between_centeres.powf(2.0);
-        self.tvc_angle_rad = PI_THREE_HALFS - (
+        let numer = self.tvc_joint_radius.powf(2.0) + self.connection_length.powf(2.0) - distance_between_centers.powf(2.0);
+        self.tvc_angle_rad = geometry::PI_THREE_HALFS - (
             numer / (2.0 * self.tvc_joint_radius * self.connection_length)
         );
 
