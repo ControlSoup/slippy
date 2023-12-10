@@ -1,6 +1,6 @@
-use crate::geometry::d2::{PI_THREE_HALFS, length_from_points, angle_from_y_rad};
+use crate::geometry::d2;
 
-struct ServoTVC{
+pub struct ServoTVC{
     servo_start_x: f64,
     servo_start_y: f64,
     servo_end_x : f64,
@@ -52,21 +52,21 @@ impl ServoTVC{
             tvc_end_x,
             tvc_end_y,
             tvc_angle_rad:
-                angle_from_y_rad(
+                d2::angle_from_y_rad(
                     &tvc_start_x,
                     &tvc_start_y,
                     &tvc_end_x,
                     &tvc_end_y
                 ),
             tvc_joint_radius:
-                length_from_points(
+                d2::length_from_points(
                     &tvc_start_x,
                     &tvc_start_y,
                     &tvc_end_x,
                     &tvc_end_y
                 ),
             connection_length:
-                length_from_points(
+                d2::length_from_points(
                     &servo_end_x,
                     &servo_end_y,
                     &tvc_end_x,
@@ -107,12 +107,7 @@ impl ServoTVC{
         self.servo_end_x = self.servo_end_x + (self.servo_joint_radius * self.servo_angle_rad.cos());
         self.servo_end_y = self.servo_end_y + (self.servo_joint_radius * self.servo_angle_rad.sin());
 
-        // Calculate distance between servo end position and tvc pivot
-        let distance_between_centeres =
-            (self.servo_end_y - self.tvc_start_y)
-            / (self.servo_end_x - self.tvc_start_x);
-
-        let ditance_between_centers = length_from_points(
+        let distance_between_centers = length_from_points(
             &self.tvc_start_x,
             &self.tvc_end_y,
             &self.servo_end_x,
@@ -130,3 +125,5 @@ impl ServoTVC{
         self.tvc_end_y = self.tvc_end_y + (self.tvc_joint_radius * self.tvc_angle_rad.sin());
     }
 }
+
+// TODO: Add test for ramped tvc

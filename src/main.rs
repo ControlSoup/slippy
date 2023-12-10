@@ -1,11 +1,3 @@
-use std::{f64::consts::PI, convert::identity};
-
-use sim::{runtime::{Runtime, Save}, integration::Integrate};
-use control::{pid::PID, ramp::Ramp};
-use physics::rigidbody::RigidBody;
-use strapdown::{vector::Vector3, quaternion::Quaternion, matrix::Matrix3x3};
-use instrumentation::sensors::BasicSensor;
-
 mod strapdown;
 mod sim;
 mod test;
@@ -17,9 +9,9 @@ mod geometry;
 mod fakers;
 
 fn main() {
-    let mut runtime = Runtime::new(20.0, 1e-3, "time [s]");
+    let mut runtime = sim::Runtime::new(20.0, 1e-3, "time [s]");
 
-    let mut test_object = RigidBody::new(
+    let mut test_object = physics::RigidBody::new(
         [0.0, 0.0, -9.8],
         [0.0, 0.0, 0.0],
         [0.0, 0.0, 0.0],
@@ -34,20 +26,20 @@ fn main() {
         [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
     );
 
-    test_object.body_moment_nm = Vector3::new(0.1, 0.1, 0.1);
+    test_object.body_moment_nm = strapdown::Vector3::new(0.1, 0.1, 0.1);
     let dt = runtime.get_dx();
-    let i_dcm = Matrix3x3::identity();
-    let i_quat = Quaternion::identity();
+    let i_dcm = strapdown::Matrix3x3::identity();
+    let i_quat = strapdown::Quaternion::identity();
 
     // PID
-    let mut altitude_ramp = Ramp::new(0.0, 5.0, 0.25);
-    let mut pid_alt = PID::new(0.4, 0.00, 0.0, 0.0);
-    let mut pid_x = PID::new(0.25, 0.001, 0.0, 0.0);
-    let mut pid_y = PID::new(0.25, 0.001, 0.0, 0.0);
-    let mut pid_z = PID::new(0.1, 0.001, 0.0, 0.0);
+    let mut altitude_ramp = control::Ramp::new(0.0, 5.0, 0.25);
+    let mut pid_alt = control::PID::new(0.4, 0.00, 0.0, 0.0);
+    let mut pid_x = control::PID::new(0.25, 0.001, 0.0, 0.0);
+    let mut pid_y = control::PID::new(0.25, 0.001, 0.0, 0.0);
+    let mut pid_z = control::PID::new(0.1, 0.001, 0.0, 0.0);
 
     // Instrumentation
-    let mut test_sensor = BasicSensor::new_simple_from_variance(0.01);
+    let mut test_sensor = instrumentation::BasicSensor::new_simple_from_variance(0.01);
 
     while runtime.is_running{
 

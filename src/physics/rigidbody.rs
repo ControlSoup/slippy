@@ -1,13 +1,9 @@
 
 use derive_more;
 
-use crate::strapdown::{
-    matrix::Matrix3x3,
-    vector::Vector3,
-    quaternion::Quaternion
-};
+use crate::strapdown;
 
-use crate::sim::{integration::Integrate, runtime::{Runtime, Save}};
+use crate::sim;
 
 #[derive(
     Debug,
@@ -24,23 +20,23 @@ use crate::sim::{integration::Integrate, runtime::{Runtime, Save}};
 
 pub struct RigidBody{
     // Forces and Moments
-    pub intertial_force_n: Vector3,
-    pub intertial_moment_nm: Vector3,
-    pub body_force_n: Vector3,
-    pub body_moment_nm: Vector3,
+    pub intertial_force_n: strapdown::Vector3,
+    pub intertial_moment_nm: strapdown::Vector3,
+    pub body_force_n: strapdown::Vector3,
+    pub body_moment_nm: strapdown::Vector3,
 
     // State
-    inertial_pos_m: Vector3,
-    inertial_vel_mps: Vector3,
-    inertial_accel_mps2: Vector3,
-    quat_b2i: Quaternion,
-    body_ang_vel_radps: Vector3,
-    body_ang_accel_radps2: Vector3,
+    inertial_pos_m: strapdown::Vector3,
+    inertial_vel_mps: strapdown::Vector3,
+    inertial_accel_mps2: strapdown::Vector3,
+    quat_b2i: strapdown::Quaternion,
+    body_ang_vel_radps: strapdown::Vector3,
+    body_ang_accel_radps2: strapdown::Vector3,
 
     // Mass Properties
     pub mass_cg_kg: f64,
-    i_tensor_cg_kgpm2: Matrix3x3,
-    inv_i_tensor_cg_kgpm2: Matrix3x3
+    i_tensor_cg_kgpm2: strapdown::Matrix3x3,
+    inv_i_tensor_cg_kgpm2: strapdown::Matrix3x3
 }
 
 impl RigidBody{
@@ -60,22 +56,22 @@ impl RigidBody{
     ) -> RigidBody{
 
         // Precompute inverse of Inertia tensor
-        let i_tensor_cg_kgpm2 = Matrix3x3::from_array(i_tensor_cg_kgpm2);
+        let i_tensor_cg_kgpm2 = strapdown::Matrix3x3::from_array(i_tensor_cg_kgpm2);
         let inv_i_tensor_cg_kgpm2 = i_tensor_cg_kgpm2.inv()
             .expect("i_tensor_cg_kgpm2 was not invertible");
 
 
         return RigidBody {
-            intertial_force_n: Vector3::from_array(intertial_force_n),
-            intertial_moment_nm: Vector3::from_array(intertial_moment_nm),
-            body_force_n: Vector3::from_array(body_force_n),
-            body_moment_nm: Vector3::from_array(body_moment_nm),
-            inertial_pos_m: Vector3::from_array(inertial_pos_m),
-            inertial_vel_mps: Vector3::from_array(inertial_vel_mps),
-            inertial_accel_mps2: Vector3::from_array(inertial_accel_mps2),
-            quat_b2i: Quaternion::from_array(quat_b2i),
-            body_ang_vel_radps: Vector3::from_array(body_ang_vel_radps),
-            body_ang_accel_radps2: Vector3::from_array(body_ang_accel_radps2),
+            intertial_force_n: strapdown::Vector3::from_array(intertial_force_n),
+            intertial_moment_nm: strapdown::Vector3::from_array(intertial_moment_nm),
+            body_force_n: strapdown::Vector3::from_array(body_force_n),
+            body_moment_nm: strapdown::Vector3::from_array(body_moment_nm),
+            inertial_pos_m: strapdown::Vector3::from_array(inertial_pos_m),
+            inertial_vel_mps: strapdown::Vector3::from_array(inertial_vel_mps),
+            inertial_accel_mps2: strapdown::Vector3::from_array(inertial_accel_mps2),
+            quat_b2i: strapdown::Quaternion::from_array(quat_b2i),
+            body_ang_vel_radps: strapdown::Vector3::from_array(body_ang_vel_radps),
+            body_ang_accel_radps2: strapdown::Vector3::from_array(body_ang_accel_radps2),
             mass_cg_kg,
             i_tensor_cg_kgpm2,
             inv_i_tensor_cg_kgpm2
@@ -84,66 +80,66 @@ impl RigidBody{
 
     pub fn identity() -> RigidBody{
         return RigidBody {
-            intertial_force_n: Vector3::zeros(),
-            intertial_moment_nm: Vector3::zeros(),
-            body_force_n: Vector3::zeros(),
-            body_moment_nm: Vector3::zeros(),
-            inertial_pos_m: Vector3::zeros(),
-            inertial_vel_mps: Vector3::zeros(),
-            inertial_accel_mps2: Vector3::zeros(),
-            quat_b2i: Quaternion::identity(),
-            body_ang_vel_radps: Vector3::zeros(),
-            body_ang_accel_radps2: Vector3::zeros(),
+            intertial_force_n: strapdown::Vector3::zeros(),
+            intertial_moment_nm: strapdown::Vector3::zeros(),
+            body_force_n: strapdown::Vector3::zeros(),
+            body_moment_nm: strapdown::Vector3::zeros(),
+            inertial_pos_m: strapdown::Vector3::zeros(),
+            inertial_vel_mps: strapdown::Vector3::zeros(),
+            inertial_accel_mps2: strapdown::Vector3::zeros(),
+            quat_b2i: strapdown::Quaternion::identity(),
+            body_ang_vel_radps: strapdown::Vector3::zeros(),
+            body_ang_accel_radps2: strapdown::Vector3::zeros(),
             mass_cg_kg: 1.0,
-            i_tensor_cg_kgpm2: Matrix3x3::identity(),
-            inv_i_tensor_cg_kgpm2: Matrix3x3::identity()
+            i_tensor_cg_kgpm2: strapdown::Matrix3x3::identity(),
+            inv_i_tensor_cg_kgpm2: strapdown::Matrix3x3::identity()
         }
     }
 
     fn zeros() -> RigidBody{
         return RigidBody {
-            intertial_force_n: Vector3::zeros(),
-            intertial_moment_nm: Vector3::zeros(),
-            body_force_n: Vector3::zeros(),
-            body_moment_nm: Vector3::zeros(),
-            inertial_pos_m: Vector3::zeros(),
-            inertial_vel_mps: Vector3::zeros(),
-            inertial_accel_mps2: Vector3::zeros(),
-            quat_b2i: Quaternion::of(0.0),
-            body_ang_vel_radps: Vector3::zeros(),
-            body_ang_accel_radps2: Vector3::zeros(),
+            intertial_force_n: strapdown::Vector3::zeros(),
+            intertial_moment_nm: strapdown::Vector3::zeros(),
+            body_force_n: strapdown::Vector3::zeros(),
+            body_moment_nm: strapdown::Vector3::zeros(),
+            inertial_pos_m: strapdown::Vector3::zeros(),
+            inertial_vel_mps: strapdown::Vector3::zeros(),
+            inertial_accel_mps2: strapdown::Vector3::zeros(),
+            quat_b2i: strapdown::Quaternion::of(0.0),
+            body_ang_vel_radps: strapdown::Vector3::zeros(),
+            body_ang_accel_radps2: strapdown::Vector3::zeros(),
             mass_cg_kg: 0.0,
-            i_tensor_cg_kgpm2: Matrix3x3::of(0.0),
-            inv_i_tensor_cg_kgpm2: Matrix3x3::of(0.0)
+            i_tensor_cg_kgpm2: strapdown::Matrix3x3::of(0.0),
+            inv_i_tensor_cg_kgpm2: strapdown::Matrix3x3::of(0.0)
         }
     }
 
-    pub fn get_pos_m(&self) -> Vector3{
+    pub fn get_pos_m(&self) -> strapdown::Vector3{
         return self.inertial_pos_m
     }
 
-    pub fn get_vel_mps(&self) -> Vector3{
+    pub fn get_vel_mps(&self) -> strapdown::Vector3{
         return self.inertial_vel_mps
     }
 
-    pub fn get_accel_mps2(&self) -> Vector3{
+    pub fn get_accel_mps2(&self) -> strapdown::Vector3{
         return self.inertial_accel_mps2
     }
 
-    pub fn get_quat(&self) -> Quaternion{
+    pub fn get_quat(&self) -> strapdown::Quaternion{
         return self.quat_b2i
     }
 
-    pub fn get_body_ang_vel_radps(&self) -> Vector3{
+    pub fn get_body_ang_vel_radps(&self) -> strapdown::Vector3{
         return self.body_ang_vel_radps
     }
 
-    pub fn get_body_ang_accel_radps2(&self) -> Vector3{
+    pub fn get_body_ang_accel_radps2(&self) -> strapdown::Vector3{
         return self.body_ang_accel_radps2
     }
 }
 
-impl Integrate for RigidBody{
+impl sim::Integrate for RigidBody{
 
     fn effects(&mut self) {
         // Rigidbody Dynamics
@@ -195,8 +191,8 @@ impl Integrate for RigidBody{
 }
 
 
-impl Save for RigidBody{
-    fn save_data(&self, node_name: &str, runtime: &mut Runtime) where Self: Sized {
+impl sim::Save for RigidBody{
+    fn save_data(&self, node_name: &str, runtime: &mut sim::Runtime) where Self: Sized {
         // State
         runtime.add_or_set(format!(
             "{node_name}.inertial_pos.x [m]").as_str(),
@@ -339,7 +335,7 @@ impl Save for RigidBody{
 
     }
 
-    fn save_data_verbose(&self, node_name: &str, runtime: &mut Runtime) where Self: Sized {
+    fn save_data_verbose(&self, node_name: &str, runtime: &mut sim::Runtime) where Self: Sized {
 
         self.save_data(node_name, runtime);
 
@@ -455,13 +451,13 @@ mod tests {
         let mut object = RigidBody::identity();
 
         // Set Forces
-        object.quat_b2i = Matrix3x3::new(
+        object.quat_b2i = strapdown::Matrix3x3::new(
             0.0, 0.0, 1.0,
             0.0, 1.0, 0.0,
             -1.0, 0.0, 0.0
         ).to_quat();
-        object.inertial_pos_m = Vector3::new(0.0, 1.0, 2.0);
-        object.body_force_n = Vector3::new(1.0, 1.0, 1.0);
+        object.inertial_pos_m = strapdown::Vector3::new(0.0, 1.0, 2.0);
+        object.body_force_n = strapdown::Vector3::new(1.0, 1.0, 1.0);
 
         let dt = 1e-4;
         let max_int = (5.0 / dt) as usize;
@@ -488,9 +484,9 @@ mod tests {
         let mut object = RigidBody::identity();
 
         // Set Forces
-        object.quat_b2i = Vector3::new(0.0, PI / 2.0,0.0).to_quat();
-        object.inertial_pos_m = Vector3::new(0.0, 1.0, 2.0);
-        object.intertial_force_n = Vector3::new(1.0, 1.0, 1.0);
+        object.quat_b2i = strapdown::Vector3::new(0.0, PI / 2.0,0.0).to_quat();
+        object.inertial_pos_m = strapdown::Vector3::new(0.0, 1.0, 2.0);
+        object.intertial_force_n = strapdown::Vector3::new(1.0, 1.0, 1.0);
 
         let dt = 1e-4;
         let max_int = (5.0 / dt) as usize;
@@ -524,31 +520,31 @@ mod tests {
 
         // Use an identity intertia tensor and mass
         let mut uut = RigidBody{
-            intertial_force_n: Vector3::zeros(),
-            intertial_moment_nm: Vector3::zeros(),
-            body_force_n: Vector3::zeros(),
-            body_moment_nm: Vector3::zeros(),
-            inertial_pos_m: Vector3::zeros(),
-            inertial_vel_mps: Vector3::zeros(),
-            inertial_accel_mps2: Vector3::zeros(),
-            quat_b2i: Vector3::new(beta, 0.0, 0.0).to_quat(),
-            body_ang_accel_radps2: Vector3::zeros(),
-            body_ang_vel_radps: Vector3::new(0.0, 0.0, 0.0),
+            intertial_force_n: strapdown::Vector3::zeros(),
+            intertial_moment_nm: strapdown::Vector3::zeros(),
+            body_force_n: strapdown::Vector3::zeros(),
+            body_moment_nm: strapdown::Vector3::zeros(),
+            inertial_pos_m: strapdown::Vector3::zeros(),
+            inertial_vel_mps: strapdown::Vector3::zeros(),
+            inertial_accel_mps2: strapdown::Vector3::zeros(),
+            quat_b2i: strapdown::Vector3::new(beta, 0.0, 0.0).to_quat(),
+            body_ang_accel_radps2: strapdown::Vector3::zeros(),
+            body_ang_vel_radps: strapdown::Vector3::new(0.0, 0.0, 0.0),
             mass_cg_kg: 1.0,
-            i_tensor_cg_kgpm2: Matrix3x3::identity(),
-            inv_i_tensor_cg_kgpm2: Matrix3x3::identity()
+            i_tensor_cg_kgpm2: strapdown::Matrix3x3::identity(),
+            inv_i_tensor_cg_kgpm2: strapdown::Matrix3x3::identity()
         };
 
-        let mut runtime = Runtime::new(10.0, 1e-3, "time [s]");
+        let mut runtime = sim::Runtime::new(10.0, 1e-3, "time [s]");
         let dt = runtime.get_dx();
         let init_euler = uut.quat_b2i.to_euler();
 
         while runtime.is_running{
             // Update spin cone velocity
-            let omega_s_vec = Vector3::new(0.0, 0.0, omega_s);
+            let omega_s_vec = strapdown::Vector3::new(0.0, 0.0, omega_s);
             let omega_c_vec = uut.get_quat()
                 .conjugate()
-                .transform(Vector3::new(0.0, 0.0, omega_c));
+                .transform(strapdown::Vector3::new(0.0, 0.0, omega_c));
 
             uut.body_ang_vel_radps = omega_s_vec + omega_c_vec;
 
@@ -569,7 +565,7 @@ mod tests {
         // Eq 11.2.1.1-7
         almost_equal_array(
             &uut.quat_b2i.to_euler().to_array(),
-            &Vector3::new(end_phi, end_theta, end_psi).to_array()
+            &strapdown::Vector3::new(end_phi, end_theta, end_psi).to_array()
         );
     }
 

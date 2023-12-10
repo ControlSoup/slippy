@@ -1,2 +1,2 @@
 pub mod rigidbody;
-pub mod servo_tvc;
+pub use rigidbody::RigidBody;

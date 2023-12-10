@@ -1,4 +1,4 @@
-use crate::sim::runtime::{Runtime, Save};
+use crate::sim;
 
 #[derive(
     Debug,
@@ -38,15 +38,15 @@ impl BangBang{
 
 }
 
-impl Save for BangBang{
-    fn save_data(&self, node_name: &str, runtime: &mut Runtime) where Self: Sized {
+impl sim::Save for BangBang{
+    fn save_data(&self, node_name: &str, runtime: &mut sim::Runtime) where Self: Sized {
         runtime.add_or_set(format!(
             "{node_name}.error [-]").as_str(),
             self.error,
         );
     }
 
-    fn save_data_verbose(&self, node_name: &str, runtime: &mut Runtime) where Self: Sized {
+    fn save_data_verbose(&self, node_name: &str, runtime: &mut sim::Runtime) where Self: Sized {
         runtime.add_or_set(format!(
             "{node_name}.setpoint [-]").as_str(),
             self.setpoint,
