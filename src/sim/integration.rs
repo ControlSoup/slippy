@@ -11,9 +11,9 @@ pub trait Integrate{
         where Self:
             Sized +
             Clone +
-            Add<Self, output = Self> +
-            Mul<f64, output = Self> +
-            Div<f64, output = Self>,
+            Add<Self, Output = Self> +
+            Mul<f64, Output = Self> +
+            Div<f64, Output = Self>,
     {
         self.effects();
 
@@ -30,8 +30,8 @@ pub trait Integrate{
             Self:
                 Sized +
                 Clone +
-                Add<Self, output = Self> +
-                Mul<f64, output = Self>
+                Add<Self, Output = Self> +
+                Mul<f64, Output = Self>
     {
         self.effects();
 

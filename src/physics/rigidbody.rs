@@ -190,6 +190,9 @@ impl sim::Integrate for RigidBody{
     }
 }
 
+// ----------------------------------------------------------------------------
+// Data Recording
+// ----------------------------------------------------------------------------
 
 impl sim::Save for RigidBody{
     fn save_data(&self, node_name: &str, runtime: &mut sim::Runtime) where Self: Sized {
@@ -442,7 +445,7 @@ mod tests {
     use std::f64::consts::PI;
 
     use crate::test::almost_equal_array;
-    use approx::assert_relative_eq;
+    use crate::sim::{Save, Integrate};
 
     use super::*;
 
@@ -540,6 +543,8 @@ mod tests {
         let init_euler = uut.quat_b2i.to_euler();
 
         while runtime.is_running{
+            uut.save_data_verbose("uut", &mut runtime);
+
             // Update spin cone velocity
             let omega_s_vec = strapdown::Vector3::new(0.0, 0.0, omega_s);
             let omega_c_vec = uut.get_quat()
@@ -549,7 +554,6 @@ mod tests {
             uut.body_ang_vel_radps = omega_s_vec + omega_c_vec;
 
             uut = uut.rk4(dt);
-            uut.save_data_verbose("uut", &mut runtime);
             runtime.increment();
         }
 

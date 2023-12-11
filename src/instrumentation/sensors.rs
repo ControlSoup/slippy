@@ -8,29 +8,32 @@ pub struct BasicSensor{
     std: f64,
     measured_value: f64,
     output_slope: f64,
-    output_offset: f64
+    output_offset: f64,
+    units: String
 }
 
 impl BasicSensor{
     pub fn new_std(
         std: f64,
         output_slope: f64,
-        output_offset: f64
+        output_offset: f64,
+        units: &str
     ) -> BasicSensor{
         return BasicSensor {
             std,
             measured_value: 0.0,
             output_slope,
-            output_offset
+            output_offset,
+            units: units.to_string()
         }
     }
 
-    pub fn new_simple_from_std(std:f64) -> BasicSensor{
-        return BasicSensor::new_std(std, 1.0, 0.0)
+    pub fn new_simple_from_std(std: f64, units: &str) -> BasicSensor{
+        return BasicSensor::new_std(std, 1.0, 0.0, units)
     }
 
-    pub fn new_simple_from_variance(variance: f64) -> BasicSensor{
-        return BasicSensor::new_std(variance.sqrt(), 1.0, 0.0)
+    pub fn new_simple_from_variance(variance: f64, units: &str) -> BasicSensor{
+        return BasicSensor::new_std(variance.sqrt(), 1.0, 0.0, units)
     }
 
     pub fn output(&mut self, actual_value: f64) -> f64{
@@ -46,7 +49,7 @@ impl BasicSensor{
 impl sim::Save for BasicSensor{
     fn save_data(&self, node_name: &str, runtime: &mut sim::Runtime) where Self: Sized {
         runtime.add_or_set(format!(
-            "{node_name}.measured_value [-]").as_str(),
+            "{}.measured_value [{}]", node_name, self.units).as_str(),
             self.measured_value
         );
     }

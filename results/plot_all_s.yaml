@@ -1,0 +1,4 @@
+GroupName: All
+Plots:
+    All:
+        x_key: 'time [s]'

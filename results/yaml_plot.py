@@ -29,6 +29,10 @@ def parse_args():
         "-d","--data",
         help="File path to your data"
     )
+    parser.add_argument(
+        "-xkey","--xkey",
+        help="Select a xkey to use"
+    )
     return parser.parse_args()
 
 

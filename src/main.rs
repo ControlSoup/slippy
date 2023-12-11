@@ -1,3 +1,5 @@
+use sim::{Runtime, Save, Integrate};
+
 mod strapdown;
 mod sim;
 mod test;
@@ -5,8 +7,8 @@ mod units;
 mod physics;
 mod control;
 mod instrumentation;
-mod geometry;
-mod fakers;
+mod geo;
+mod forward_models;
 
 fn main() {
     let mut runtime = sim::Runtime::new(20.0, 1e-3, "time [s]");
@@ -39,7 +41,7 @@ fn main() {
     let mut pid_z = control::PID::new(0.1, 0.001, 0.0, 0.0);
 
     // Instrumentation
-    let mut test_sensor = instrumentation::BasicSensor::new_simple_from_variance(0.01);
+    let mut test_sensor = instrumentation::BasicSensor::new_simple_from_variance(0.01,"m");
 
     while runtime.is_running{
 

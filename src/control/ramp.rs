@@ -1,4 +1,4 @@
-use crate::sim;
+use crate::sim::{Runtime, Save};
 
 pub struct Ramp{
    pub target: f64,
@@ -26,14 +26,14 @@ impl Ramp{
     }
 }
 
-impl sim::Save for Ramp{
-    fn save_data(&self, node_name: &str, runtime: &mut sim::Runtime) where Self: Sized {
+impl Save for Ramp{
+    fn save_data(&self, node_name: &str, runtime: &mut Runtime) where Self: Sized {
         runtime.add_or_set(format!(
             "{node_name}.current_value [-]").as_str(),self.current_value
         );
     }
 
-    fn save_data_verbose(&self, node_name: &str, runtime: &mut sim::Runtime) where Self: Sized {
+    fn save_data_verbose(&self, node_name: &str, runtime: &mut Runtime) where Self: Sized {
         self.save_data(node_name, runtime);
         runtime.add_or_set(format!(
             "{node_name}.target [-]").as_str(),self.target

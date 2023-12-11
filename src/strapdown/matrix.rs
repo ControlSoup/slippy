@@ -243,7 +243,7 @@ impl Matrix3x3{
 // ----------------------------------------------------------------------------
 
 impl Mul<Matrix3x3> for Matrix3x3{
-    type output = Matrix3x3;
+    type Output = Matrix3x3;
 
     fn mul(self, b: Matrix3x3) -> Matrix3x3{
         // 3x3 Matrix Multiplication
@@ -270,7 +270,7 @@ impl Mul<Matrix3x3> for Matrix3x3{
 
 impl Mul<Vector3> for Matrix3x3{
     // Eq 3.1.1-2, Pg 3-15
-    type output = Vector3;
+    type Output = Vector3;
 
     fn mul(self, vec: Vector3) -> Vector3{
         // 3x3 times a 3x1 matrix
