@@ -169,7 +169,7 @@ mod tests {
     #[test]
     fn sin_sweep(){
         let mut runtime = sim::Runtime::new(2.0 * PI, 1e-3, "angle [rad]");
-        let mut tvc = ServoTVC::new_basic(-1.0, 1.0, 1.0);
+        let mut tvc = ServoTVC::new_basic(-1.5, 0.5, 1.0);
 
         assert_relative_eq!(
             tvc.a.j,
