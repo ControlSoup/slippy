@@ -24,14 +24,14 @@ def csv_to_datadict(file_path: str, fps, time_key='time [s]'):
 def get_frames_data(datadict):
     frames_data = []
     for i, _ in enumerate(datadict['angle [rad]']):
-        a = [(datadict['tvc.p3_x [m]'][i], datadict['tvc.p3_y [m]'][i]),
-             (datadict['tvc.p4_x [m]'][i], datadict['tvc.p4_y [m]'][i])]
-        b = [(datadict['tvc.p1_x [m]'][i], datadict['tvc.p1_y [m]'][i]),
-             (datadict['tvc.p2_x [m]'][i], datadict['tvc.p2_y [m]'][i])]
-        g = [(datadict['tvc.p1_x [m]'][i], datadict['tvc.p1_y [m]'][i]),
-             (datadict['tvc.p3_x [m]'][i], datadict['tvc.p3_y [m]'][i])]
-        l = [(datadict['tvc.p2_x [m]'][i], datadict['tvc.p2_y [m]'][i]),
-             (datadict['tvc.p4_x [m]'][i], datadict['tvc.p4_y [m]'][i])]
+        a = [(datadict['tvc.a.start_x [m]'][i], datadict['tvc.a.start_y [m]'][i]),
+             (datadict['tvc.a.end_x [m]'][i], datadict['tvc.a.end_y [m]'][i])]
+        b = [(datadict['tvc.b.start_x [m]'][i], datadict['tvc.b.start_y [m]'][i]),
+             (datadict['tvc.b.end_x [m]'][i], datadict['tvc.b.end_y [m]'][i])]
+        g = [(datadict['tvc.g.start_x [m]'][i], datadict['tvc.g.start_y [m]'][i]),
+             (datadict['tvc.g.end_x [m]'][i], datadict['tvc.g.end_y [m]'][i])]
+        l = [(datadict['tvc.l.start_x [m]'][i], datadict['tvc.l.start_y [m]'][i]),
+             (datadict['tvc.l.end_x [m]'][i], datadict['tvc.l.end_y [m]'][i])]
         frames_data.append([a, b, g, l])
     return frames_data
 

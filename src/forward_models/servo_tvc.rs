@@ -1,26 +1,26 @@
 use std::f64::consts::PI;
 
 use crate::geo;
-use crate::geo::PI_THREE_HALFS;
 use crate::sim;
+use crate::units::deg_to_rad;
 
 
 /// Simulates a single axis tvc mechanism as a four bar linkage
 pub struct ServoTVC{
-    a: geo::Vector2, // Input link (Servo)
-    b: geo::Vector2, // Ouput link (Thrust Axis)
-    g: geo::Vector2, // Ground link (Servo Origin to Thrust Axis Origin)
-    l: geo::Vector2, // Free link (TVC Connection arm)
+    a: geo::Line2, // Input link (Servo)
+    b: geo::Line2, // Ouput link (Thrust Axis)
+    g: geo::Line2, // Ground link (Servo Origin to Thrust Axis Origin)
+    l: geo::Line2, // Free link (TVC Connection arm)
     servo_angle_rad: f64,
     tvc_angle_rad: f64
 }
 
 impl ServoTVC{
     fn new(
-        a: geo::Vector2,
-        b: geo::Vector2,
-        g: geo::Vector2,
-        l: geo::Vector2
+        a: geo::Line2,
+        b: geo::Line2,
+        g: geo::Line2,
+        l: geo::Line2  
     ) -> ServoTVC{
         return ServoTVC{
             a,
@@ -38,16 +38,11 @@ impl ServoTVC{
         p4: [f64; 2]
     ) -> ServoTVC{
         return ServoTVC::new(
-            geo::Vector2::from_points(p3[0], p3[1], p4[0], p4[1]),
-            geo::Vector2::from_points(0.0, 0.0, p2[0], p2[1]),
-            geo::Vector2::from_points(0.0, 0.0, p3[0], p3[1]),
-            geo::Vector2::from_points(p2[0], p2[1], p4[0], p4[1])
+            geo::Line2::new(p3[0], p3[1], p4[0], p4[1]),
+            geo::Line2::new(0.0, 0.0, p2[0], p2[1]),
+            geo::Line2::new(0.0, 0.0, p3[0], p3[1]),
+            geo::Line2::new(p2[0], p2[1], p4[0], p4[1])
         )
-    }
-
-    fn to_points_array(&self) -> [f64; 8]{
-        let _u = self.g + self.a;
-        return [0.0, 0.0, self.b.i, self.b.j, self.g.i, self.g.j, _u.i, _u.j]
     }
 
     fn new_basic(
@@ -67,20 +62,38 @@ impl ServoTVC{
         let alpha = geo::PI_THREE_HALFS + servo_angle_rad;
 
         // Define new servo vector
-        self.a = geo::Vector2::from_angle_rad(self.a.norm(), alpha);
-
-        // Precompute a couple things duplicates for readability
+        self.a = geo::Line2::from_angle_rad(
+            self.a.start_x_m, 
+            self.a.start_y_m, 
+            self.a.length_m(), 
+            alpha
+        );
 
         // Calculate the intersection between the circles defind by tvc and linkage
-        let _u =  self.g + self.a;
-        let _v = _u.get_perpendicular();
+        let c0 = geo::Circle::new(
+            self.a.end_x_m,
+            self.a.end_y_m,
+            self.l.length_m()
+        );
 
-        let _s = (1.0 + ((self.l.norm_sqr() - self.b.norm_sqr()) / _u.norm_sqr())) / 2.0;
-        let _t = ((self.l.norm_sqr() / _u.norm_sqr()) - _s.powf(2.0)).sqrt();
+        let c1 = geo::Circle::new(
+            self.b.start_x_m, self.b.start_y_m, self.b.length_m()
+        );
 
-        let _new_coord = _u + (_u * _s) + (_v * _t);
-        self.b = geo::Vector2::new(_new_coord.i, _new_coord.j);
-        self.l = geo::Vector2::from_points(self.b.i, self.b.j, _u.i, _u.j);
+        let intersect_l_b = match c1.intersect_circle(&c0){
+            None => panic!("Bad: \n b: {:?}\n Angle: {:?}\n a: {:?}\n l: {:?}\n c0: {:?}\n c1:{:?}", self.b, self.servo_angle_rad, self.a, self.l, c0, c1),
+            Some(vector) => vector
+        };
+
+
+        self.b.end_x_m = intersect_l_b.i;
+        self.b.end_y_m = intersect_l_b.j;
+        self.l = geo::Line2::new(
+            self.b.end_x_m,
+            self.b.end_y_m,
+            self.a.end_x_m,
+            self.a.end_y_m
+        );
 
 
         self.get_tvc_angle_rad();
@@ -110,46 +123,69 @@ impl sim::Save for ServoTVC{
 
     fn save_data_verbose(&self, node_name: &str, runtime: &mut sim::Runtime) where Self: Sized {
         self.save_data(node_name, runtime);
+        
+        // Points
+        runtime.add_or_set(format!(
+            "{node_name}.a.start_x [m]").as_str(), self.a.start_x_m
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.a.start_y [m]").as_str(), self.a.start_y_m
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.a.end_x [m]").as_str(), self.a.end_x_m
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.a.end_y [m]").as_str(), self.a.end_y_m
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.b.start_x [m]").as_str(), self.b.start_x_m
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.b.start_y [m]").as_str(), self.b.start_y_m
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.b.end_x [m]").as_str(), self.b.end_x_m
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.b.end_y [m]").as_str(), self.b.end_y_m
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.g.start_x [m]").as_str(), self.g.start_x_m
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.g.start_y [m]").as_str(), self.g.start_y_m
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.g.end_x [m]").as_str(), self.g.end_x_m
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.g.end_y [m]").as_str(), self.g.end_y_m
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.l.start_x [m]").as_str(), self.l.start_x_m
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.l.start_y [m]").as_str(), self.l.start_y_m
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.l.end_x [m]").as_str(), self.l.end_x_m
+        );
+        runtime.add_or_set(format!(
+            "{node_name}.l.end_y [m]").as_str(), self.l.end_y_m
+        );
 
-        // Defining points
-        let points = self.to_points_array();
+        // Lengths
         runtime.add_or_set(format!(
-            "{node_name}.p1_x [m]").as_str(),points[0]
+            "{node_name}.a.length [m]").as_str(), self.a.length_m()
         );
         runtime.add_or_set(format!(
-            "{node_name}.p1_y [m]").as_str(),points[1]
+            "{node_name}.b.length [m]").as_str(), self.b.length_m()
         );
         runtime.add_or_set(format!(
-            "{node_name}.p2_x [m]").as_str(),points[2]
+            "{node_name}.g.length [m]").as_str(), self.g.length_m()
         );
         runtime.add_or_set(format!(
-            "{node_name}.p2_y [m]").as_str(),points[3]
-        );
-        runtime.add_or_set(format!(
-            "{node_name}.p3_x [m]").as_str(),points[4]
-        );
-        runtime.add_or_set(format!(
-            "{node_name}.p3_y [m]").as_str(),points[5]
-        );
-        runtime.add_or_set(format!(
-            "{node_name}.p4_x [m]").as_str(),points[6]
-        );
-        runtime.add_or_set(format!(
-            "{node_name}.p4_y [m]").as_str(),points[7]
-        );
-
-        // Vectors
-        runtime.add_or_set(format!(
-            "{node_name}.a_norm [-]").as_str(),self.a.norm()
-        );
-        runtime.add_or_set(format!(
-            "{node_name}.b_norm [-]").as_str(),self.a.norm()
-        );
-        runtime.add_or_set(format!(
-            "{node_name}.g_norm [-]").as_str(),self.g.norm()
-        );
-        runtime.add_or_set(format!(
-            "{node_name}.l_norm [-]").as_str(),self.l.norm()
+            "{node_name}.l.length [m]").as_str(), self.l.length_m()
         );
     }
 }
@@ -162,25 +198,109 @@ impl sim::Save for ServoTVC{
 mod tests {
     use std::f64::consts::PI;
 
+    use crate::geo::{PI_HALF,PI_QUARTER};
+    use crate::sim::Save;
     use super::*;
     use approx::assert_relative_eq;
-    use crate::{test::almost_equal_array, sim::{self, Save}};
+    use crate::test::almost_equal_array;
 
     #[test]
     fn sin_sweep(){
-        let mut runtime = sim::Runtime::new(2.0 * PI, 1e-3, "angle [rad]");
+        let mut runtime = sim::Runtime::new(PI * 2.0, 1e-3, "angle [rad]");
         let mut tvc = ServoTVC::new_basic(-1.5, 0.5, 1.0);
 
+        // Ensure TVC axis
         assert_relative_eq!(
-            tvc.a.j,
-            -1.0,
-            max_relative = 1e-6
+            tvc.b.start_x_m,
+            0.0,
+            max_relative=1e-6
         );
+        assert_relative_eq!(
+            tvc.b.end_x_m,
+            0.0,
+            max_relative=1e-6
+        );
+        assert_relative_eq!(
+            tvc.b.start_y_m,
+            0.0,
+            max_relative=1e-6
+        );
+        assert_relative_eq!(
+            tvc.b.end_y_m,
+            -2.0,
+            max_relative=1e-6
+        );
+
+        // Ensure TVC arm is intialized correctly
+        assert_relative_eq!(
+            tvc.a.start_x_m,
+            1.0,
+            max_relative=1e-6
+        );
+        assert_relative_eq!(
+            tvc.a.end_x_m,
+            1.0,
+            max_relative=1e-6
+        );
+        assert_relative_eq!(
+            tvc.a.start_y_m,
+            -1.5,
+            max_relative=1e-6
+        );
+        assert_relative_eq!(
+            tvc.a.end_y_m,
+            -2.0,
+            max_relative=1e-6
+        );
+
+        // Ensure ground is intialized correctly
+        assert_relative_eq!(
+            tvc.g.start_x_m,
+            0.0,
+            max_relative=1e-6
+        );
+        assert_relative_eq!(
+            tvc.g.end_x_m,
+            1.0,
+            max_relative=1e-6
+        );
+        assert_relative_eq!(
+            tvc.g.start_y_m,
+            0.0,
+            max_relative=1e-6
+        );
+        assert_relative_eq!(
+            tvc.g.end_y_m,
+            -1.5,
+            max_relative=1e-6
+        );
+
+        // Ensure TVC arm is intialized correctly
+        assert_relative_eq!(
+            tvc.l.start_x_m,
+            0.0,
+            max_relative=1e-6
+        );
+        assert_relative_eq!(
+            tvc.l.end_x_m,
+            1.0,
+            max_relative=1e-6
+        );
+        assert_relative_eq!(
+            tvc.l.start_y_m,
+            -2.0,
+            max_relative=1e-6
+        );
+        assert_relative_eq!(
+            tvc.l.end_y_m,
+            -2.0,
+            max_relative=1e-6
+        );
+
         while runtime.is_running{
-            tvc.save_data_verbose("tvc", &mut runtime);
+        tvc.save_data_verbose("tvc", &mut runtime);
             tvc.set_servo_angle_rad(runtime.get_x());
             runtime.increment();
-
         };
 
         runtime.export_to_csv("tvc_sinsweep", "results/data")
