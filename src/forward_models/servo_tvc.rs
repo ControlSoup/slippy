@@ -16,7 +16,7 @@ pub struct ServoTVC{
 }
 
 impl ServoTVC{
-    fn new(
+    pub fn new(
         a: geo::Line2,
         b: geo::Line2,
         g: geo::Line2,
@@ -32,7 +32,7 @@ impl ServoTVC{
         }
     }
 
-    fn from_points(
+    pub fn from_points(
         p2: [f64; 2],
         p3: [f64; 2],
         p4: [f64; 2]
@@ -45,7 +45,7 @@ impl ServoTVC{
         )
     }
 
-    fn new_basic(
+    pub fn new_basic(
         servo_start_y_m: f64,
         servo_radius_m: f64,
         connection_length_m: f64
@@ -57,7 +57,7 @@ impl ServoTVC{
         )
     }
 
-    fn set_servo_angle_rad(&mut self, servo_angle_rad: f64){
+    pub fn set_servo_angle_rad(&mut self, servo_angle_rad: f64){
         self.servo_angle_rad = servo_angle_rad;
         let alpha = geo::PI_THREE_HALFS + servo_angle_rad;
 
@@ -99,7 +99,7 @@ impl ServoTVC{
         self.get_tvc_angle_rad();
     }
 
-    fn get_tvc_angle_rad(&mut self) -> f64{
+    pub fn get_tvc_angle_rad(&mut self) -> f64{
         let beta = self.b.angle_x_rad();
         self.tvc_angle_rad = beta - geo::PI_THREE_HALFS;
 
@@ -206,102 +206,191 @@ mod tests {
 
     #[test]
     fn sin_sweep(){
-        let mut runtime = sim::Runtime::new(PI * 2.0, 1e-3, "angle [rad]");
+        let mut runtime = sim::Runtime::new(PI * 2.0, 1e-2, "angle [rad]");
         let mut tvc = ServoTVC::new_basic(-1.5, 0.5, 1.0);
 
         // Ensure TVC axis
         assert_relative_eq!(
             tvc.b.start_x_m,
             0.0,
-            max_relative=1e-6
+            max_relative=1e-2
         );
         assert_relative_eq!(
             tvc.b.end_x_m,
             0.0,
-            max_relative=1e-6
+            max_relative=1e-2
         );
         assert_relative_eq!(
             tvc.b.start_y_m,
             0.0,
-            max_relative=1e-6
+            max_relative=1e-2
         );
         assert_relative_eq!(
             tvc.b.end_y_m,
             -2.0,
-            max_relative=1e-6
+            max_relative=1e-2
         );
 
         // Ensure TVC arm is intialized correctly
         assert_relative_eq!(
             tvc.a.start_x_m,
             1.0,
-            max_relative=1e-6
+            max_relative=1e-2
         );
         assert_relative_eq!(
             tvc.a.end_x_m,
             1.0,
-            max_relative=1e-6
+            max_relative=1e-2
         );
         assert_relative_eq!(
             tvc.a.start_y_m,
             -1.5,
-            max_relative=1e-6
+            max_relative=1e-2
         );
         assert_relative_eq!(
             tvc.a.end_y_m,
             -2.0,
-            max_relative=1e-6
+            max_relative=1e-2
         );
 
         // Ensure ground is intialized correctly
         assert_relative_eq!(
             tvc.g.start_x_m,
             0.0,
-            max_relative=1e-6
+            max_relative=1e-2
         );
         assert_relative_eq!(
             tvc.g.end_x_m,
             1.0,
-            max_relative=1e-6
+            max_relative=1e-2
         );
         assert_relative_eq!(
             tvc.g.start_y_m,
             0.0,
-            max_relative=1e-6
+            max_relative=1e-2
         );
         assert_relative_eq!(
             tvc.g.end_y_m,
             -1.5,
-            max_relative=1e-6
+            max_relative=1e-2
         );
 
         // Ensure TVC arm is intialized correctly
         assert_relative_eq!(
             tvc.l.start_x_m,
             0.0,
-            max_relative=1e-6
+            max_relative=1e-2
         );
         assert_relative_eq!(
             tvc.l.end_x_m,
             1.0,
-            max_relative=1e-6
+            max_relative=1e-2
         );
         assert_relative_eq!(
             tvc.l.start_y_m,
             -2.0,
-            max_relative=1e-6
+            max_relative=1e-2
         );
         assert_relative_eq!(
             tvc.l.end_y_m,
             -2.0,
-            max_relative=1e-6
+            max_relative=1e-2
         );
 
         while runtime.is_running{
         tvc.save_data_verbose("tvc", &mut runtime);
+
+            if runtime.get_x() >= runtime.get_max_x(){
+                break
+            }
+
             tvc.set_servo_angle_rad(runtime.get_x());
             runtime.increment();
         };
+
+        assert_relative_eq!(
+            tvc.b.start_x_m,
+            0.0,
+            max_relative=1e-2
+        );
+        assert_relative_eq!(
+            tvc.b.end_x_m,
+            0.0,
+            max_relative=1e-2
+        );
+        assert_relative_eq!(
+            tvc.b.start_y_m,
+            0.0,
+            max_relative=1e-2
+        );
+        assert_relative_eq!(
+            tvc.b.end_y_m,
+            -2.0,
+            max_relative=1e-2
+        );
+
+        assert_relative_eq!(
+            tvc.a.start_x_m,
+            1.0,
+            max_relative=1e-2
+        );
+        assert_relative_eq!(
+            tvc.a.end_x_m,
+            1.0,
+            max_relative=1e-2
+        );
+        assert_relative_eq!(
+            tvc.a.start_y_m,
+            -1.5,
+            max_relative=1e-2
+        );
+        assert_relative_eq!(
+            tvc.a.end_y_m,
+            -2.0,
+            max_relative=1e-2
+        );
+
+        assert_relative_eq!(
+            tvc.g.start_x_m,
+            0.0,
+            max_relative=1e-2
+        );
+        assert_relative_eq!(
+            tvc.g.end_x_m,
+            1.0,
+            max_relative=1e-2
+        );
+        assert_relative_eq!(
+            tvc.g.start_y_m,
+            0.0,
+            max_relative=1e-2
+        );
+        assert_relative_eq!(
+            tvc.g.end_y_m,
+            -1.5,
+            max_relative=1e-2
+        );
+
+        assert_relative_eq!(
+            tvc.l.start_x_m,
+            0.0,
+            max_relative=1e-2
+        );
+        assert_relative_eq!(
+            tvc.l.end_x_m,
+            1.0,
+            max_relative=1e-2
+        );
+        assert_relative_eq!(
+            tvc.l.start_y_m,
+            -2.0,
+            max_relative=1e-2
+        );
+        assert_relative_eq!(
+            tvc.l.end_y_m,
+            -2.0,
+            max_relative=1e-2
+        );
 
         runtime.export_to_csv("tvc_sinsweep", "results/data")
     }

@@ -1,11 +1,7 @@
-use std::{ops::Mul, vec};
+use std::f64::consts::PI;
 use derive_more;
 
-pub struct Point2{
-    pub x: f64,
-    pub y: f64
-}
-
+use super::PI_DOUBLE;
 
 #[derive(
     Debug,
@@ -274,6 +270,18 @@ impl Circle{
             self.center_x_m,
             self.center_y_m
         )
+    }
+
+    pub fn diameter_m(&self) -> f64{
+        return self.radius_m * 2.0
+    }
+
+    pub fn area(&self) -> f64{
+        return self.radius_m.powf(2.0) * PI 
+    }
+
+    pub fn circumference(&self) -> f64{
+        return PI_DOUBLE * self.radius_m
     }
 
     pub fn intersect_circle(&self, circle2: &Circle) -> Option<Vector2>{

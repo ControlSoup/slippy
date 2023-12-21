@@ -73,24 +73,17 @@ impl Runtime{
     }
 
     pub fn increment(&mut self){
-        self.current_index += 1;
 
-        if self.current_index > self.x_array.len() - 1{
-            println!(
-                "    WARNING| Max Index [{}] has been reached, \
-                current index  is [{}]",
-                self.x_array.len(),
-                self.current_index,
-            );
-            self.current_index -= 1;
-            self.is_running = false;
-        }
-        else{
+        if self.current_index <= (self.x_array.len() - 1){
+            self.current_index += 1;
+
             // Store the current value
             for (_, array) in self.data_dict.iter_mut(){
                 array[self.current_index] = array[self.current_index - 1];
             }
-        }
+        } else {
+            self.is_running = false;
+        };
 
     }
 

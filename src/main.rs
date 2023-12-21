@@ -29,8 +29,9 @@ fn main() {
     );
 
     test_object.body_moment_nm = strapdown::Vector3::new(0.1, 0.1, 0.1);
+
+    // Useful vars
     let dt = runtime.get_dx();
-    let i_dcm = strapdown::Matrix3x3::identity();
     let i_quat = strapdown::Quaternion::identity();
 
     // PID
@@ -39,6 +40,9 @@ fn main() {
     let mut pid_x = control::PID::new(0.25, 0.001, 0.0, 0.0);
     let mut pid_y = control::PID::new(0.25, 0.001, 0.0, 0.0);
     let mut pid_z = control::PID::new(0.1, 0.001, 0.0, 0.0);
+
+    // Servo TVC
+    let tvc = forward_models::ServoTVC::from_points([0.0, -0.04], [0.021, 0.0], [0.021, -0.04]);
 
     // Instrumentation
     let mut test_sensor = instrumentation::BasicSensor::new_simple_from_variance(0.01,"m");
