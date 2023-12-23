@@ -5,6 +5,8 @@
 // 3rd Party
 use derive_more;
 
+use crate::geo::Vector2;
+
 use super::{quaternion::Quaternion, matrix::Matrix3x3};
 
 // Crate
@@ -50,39 +52,26 @@ impl Vector3{
         return Vector3::new(array[0], array[1], array[2])
     }
 
+    pub fn from_spherical_coord(
+        norm: f64, 
+        angle_alpha_rad: f64, 
+        angle_beta_rad: f64
+    ) -> Vector3{
+        // Source: https://en.wikipedia.org/wiki/Spherical_coordinate_system
+        return Vector3::new(
+            norm * angle_alpha_rad.cos() * angle_beta_rad.cos(),
+            norm * angle_alpha_rad.sin() * angle_beta_rad.sin(),
+            norm * angle_alpha_rad.cos()
+        )
+    }
+
     pub fn to_array(self) -> [f64; 3]{
         // Eq: 3.1-10, Pg 3-3
         return [self.x, self.y, self.z]
     }
 
-    pub fn quat_form(self) -> Quaternion{
-        // Eq 3.2.3.1-3, Pg 3-44
-        return Quaternion::new(
-            0.0, self.x, self.y, self.z
-        )
-    }
-
-    pub fn norm(self) -> f64{
-        // Eq: 3.1.1-4, Pg 3-8
-        return (self.x.powf(2.0) + self.y.powf(2.0) + self.z.powf(2.0)).sqrt()
-    }
-
-    pub fn dot(self, vec: &Vector3) -> f64{
-        // Eq 3.1.1-5, Pg 3-8
-        return (self.x * vec.x) + (self.y * vec.y) + (self.z * vec.z)
-    }
-
-    pub fn cross(self, vec: &Vector3) -> Vector3{
-        // Eq 3.1.1-6, Pg 3-8
-        return Vector3::new(
-            (self.y * vec.z) - (self.z * vec.y),
-            (self.z * vec.x) - (self.x * vec.z),
-            (self.x * vec.y) - (self.y * vec.x)
-        )
-    }
-
-    pub fn error(self, target: Vector3) -> Vector3{
-        return target - self
+    pub fn to_unit(self) -> Vector3{
+        return self.clone() / self.norm()
     }
 
     pub fn to_dcm(self) -> Matrix3x3{
@@ -117,6 +106,36 @@ impl Vector3{
 
     pub fn to_quat(self)-> Quaternion{
         return self.to_dcm().to_quat()
+    }
+
+    pub fn quat_form(self) -> Quaternion{
+        // Eq 3.2.3.1-3, Pg 3-44
+        return Quaternion::new(
+            0.0, self.x, self.y, self.z
+        )
+    }
+
+    pub fn norm(self) -> f64{
+        // Eq: 3.1.1-4, Pg 3-8
+        return (self.x.powf(2.0) + self.y.powf(2.0) + self.z.powf(2.0)).sqrt()
+    }
+
+    pub fn dot(self, vec: &Vector3) -> f64{
+        // Eq 3.1.1-5, Pg 3-8
+        return (self.x * vec.x) + (self.y * vec.y) + (self.z * vec.z)
+    }
+
+    pub fn cross(self, vec: &Vector3) -> Vector3{
+        // Eq 3.1.1-6, Pg 3-8
+        return Vector3::new(
+            (self.y * vec.z) - (self.z * vec.y),
+            (self.z * vec.x) - (self.x * vec.z),
+            (self.x * vec.y) - (self.y * vec.x)
+        )
+    }
+
+    pub fn error(self, target: Vector3) -> Vector3{
+        return target - self
     }
 }
 

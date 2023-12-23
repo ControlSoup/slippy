@@ -1,65 +1,76 @@
-use std::f64::consts::PI;
-
 use crate::geo;
 use crate::sim;
-use crate::units::deg_to_rad;
 
 
-/// Simulates a single axis tvc mechanism as a four bar linkage
-pub struct ServoTVC{
-    a: geo::Line2, // Input link (Servo)
-    b: geo::Line2, // Ouput link (Thrust Axis)
-    g: geo::Line2, // Ground link (Servo Origin to Thrust Axis Origin)
-    l: geo::Line2, // Free link (TVC Connection arm)
-    servo_angle_rad: f64,
-    tvc_angle_rad: f64
+pub struct FourBarLinkage{
+    a: geo::Line2, // Input link 
+    b: geo::Line2, // Ouput link 
+    g: geo::Line2, // Ground link 
+    l: geo::Line2, // Free link 
+    input_angle_rad: f64,
+    output_angle_rad: f64,
+    max_input_angle_rad: f64
 }
 
-impl ServoTVC{
+impl FourBarLinkage{
     pub fn new(
         a: geo::Line2,
         b: geo::Line2,
         g: geo::Line2,
-        l: geo::Line2  
-    ) -> ServoTVC{
-        return ServoTVC{
+        l: geo::Line2,
+        max_input_angle_rad: f64
+    ) -> FourBarLinkage{
+        return FourBarLinkage{
             a,
             b,
             g,
             l,
-            servo_angle_rad: a.angle_x_rad(),
-            tvc_angle_rad: b.angle_x_rad()
+            input_angle_rad: a.angle_x_rad(),
+            output_angle_rad: b.angle_x_rad(),
+            max_input_angle_rad
         }
     }
 
     pub fn from_points(
         p2: [f64; 2],
         p3: [f64; 2],
-        p4: [f64; 2]
-    ) -> ServoTVC{
-        return ServoTVC::new(
+        p4: [f64; 2],
+        max_input_angle_rad:f64
+    ) -> FourBarLinkage{
+        return FourBarLinkage::new(
             geo::Line2::new(p3[0], p3[1], p4[0], p4[1]),
             geo::Line2::new(0.0, 0.0, p2[0], p2[1]),
             geo::Line2::new(0.0, 0.0, p3[0], p3[1]),
-            geo::Line2::new(p2[0], p2[1], p4[0], p4[1])
+            geo::Line2::new(p2[0], p2[1], p4[0], p4[1]),
+            max_input_angle_rad
         )
     }
 
     pub fn new_basic(
         servo_start_y_m: f64,
         servo_radius_m: f64,
-        connection_length_m: f64
-    ) -> ServoTVC{
-        return ServoTVC::from_points(
+        connection_length_m: f64,
+        max_input_angle_rad: f64
+    ) -> FourBarLinkage{
+        return FourBarLinkage::from_points(
             [0.0, servo_start_y_m - servo_radius_m],
             [connection_length_m, servo_start_y_m],
-            [connection_length_m, servo_start_y_m - servo_radius_m]
+            [connection_length_m, servo_start_y_m - servo_radius_m],
+            max_input_angle_rad
         )
     }
 
-    pub fn set_servo_angle_rad(&mut self, servo_angle_rad: f64){
-        self.servo_angle_rad = servo_angle_rad;
-        let alpha = geo::PI_THREE_HALFS + servo_angle_rad;
+    pub fn set_servo_angle_rad(&mut self, input_angle_rad: f64){
+
+        if input_angle_rad >= self.max_input_angle_rad{
+            self.input_angle_rad = self.max_input_angle_rad
+        } else if input_angle_rad <= -self.max_input_angle_rad{
+            self.input_angle_rad = -self.max_input_angle_rad
+        } else{
+            self.input_angle_rad = input_angle_rad
+        };
+
+        let alpha = geo::PI_THREE_HALFS + input_angle_rad;
 
         // Define new servo vector
         self.a = geo::Line2::from_angle_rad(
@@ -81,7 +92,7 @@ impl ServoTVC{
         );
 
         let intersect_l_b = match c1.intersect_circle(&c0){
-            None => panic!("Bad: \n b: {:?}\n Angle: {:?}\n a: {:?}\n l: {:?}\n c0: {:?}\n c1:{:?}", self.b, self.servo_angle_rad, self.a, self.l, c0, c1),
+            None => panic!("Bad: \n b: {:?}\n Angle: {:?}\n a: {:?}\n l: {:?}\n c0: {:?}\n c1:{:?}", self.b, self.input_angle_rad, self.a, self.l, c0, c1),
             Some(vector) => vector
         };
 
@@ -101,22 +112,29 @@ impl ServoTVC{
 
     pub fn get_tvc_angle_rad(&mut self) -> f64{
         let beta = self.b.angle_x_rad();
-        self.tvc_angle_rad = beta - geo::PI_THREE_HALFS;
+        self.output_angle_rad = beta - geo::PI_THREE_HALFS;
 
-        return self.tvc_angle_rad
+        return self.output_angle_rad
+    }
+
+    pub fn get_thrust_vector(&mut self) -> geo::Vector2{
+        let beta = self.b.angle_x_rad();
+        self.output_angle_rad = beta - geo::PI_THREE_HALFS;
+
+        return geo::Vector2::from_angle_rad(self.b.length_m(), self.output_angle_rad)
     }
 }
 // ----------------------------------------------------------------------------
 // Data recording
 // ----------------------------------------------------------------------------
 
-impl sim::Save for ServoTVC{
+impl sim::Save for FourBarLinkage{
     fn save_data(&self, node_name: &str, runtime: &mut sim::Runtime) where Self: Sized {
         runtime.add_or_set(format!(
-            "{node_name}.tvc_angle [rad]").as_str(),self.tvc_angle_rad
+            "{node_name}.tvc_angle [rad]").as_str(),self.output_angle_rad
         );
         runtime.add_or_set(format!(
-            "{node_name}.servo_angle [rad]").as_str(),self.servo_angle_rad
+            "{node_name}.servo_angle [rad]").as_str(),self.input_angle_rad
         );
 
     }
@@ -207,7 +225,7 @@ mod tests {
     #[test]
     fn sin_sweep(){
         let mut runtime = sim::Runtime::new(PI * 2.0, 1e-2, "angle [rad]");
-        let mut tvc = ServoTVC::new_basic(-1.5, 0.5, 1.0);
+        let mut tvc = FourBarLinkage::new_basic(-1.5, 0.5, 1.0, 3.0 * PI);
 
         // Ensure TVC axis
         assert_relative_eq!(

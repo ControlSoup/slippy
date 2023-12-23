@@ -8,10 +8,7 @@ use derive_more;
 use std::f64::consts::PI;
 
 // Crate
-
-use crate::strapdown::vector::Vector3;
-
-use super::quaternion::Quaternion;
+use super::{Vector3, Quaternion};
 
 // ----------------------------------------------------------------------------
 // Matrix and Direction Cosines [3.2.1, Pg 3-15]

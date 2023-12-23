@@ -1,2 +1,2 @@
-pub mod servo_tvc;
-pub use servo_tvc::ServoTVC;
+pub mod four_bar_linkage;
+pub use four_bar_linkage::FourBarLinkage;

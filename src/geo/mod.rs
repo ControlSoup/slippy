@@ -9,3 +9,8 @@ pub mod d2;
 pub use d2::Vector2;
 pub use d2::Line2;
 pub use d2::Circle;
+
+pub mod d3;
+pub use d3::Vector3;
+pub use d3::Matrix3x3;
+pub use d3::Quaternion;
