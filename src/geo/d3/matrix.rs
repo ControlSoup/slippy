@@ -135,17 +135,17 @@ impl Matrix3x3{
 
         let mut euler = Vector3::zeros();
 
-        euler.y = (
+        euler.j = (
             (-self.c31) / (self.c32.powf(2.0) + self.c33.powf(2.0)).sqrt()
         ).atan();
         if self.c31.abs() < 0.999{
-            euler.x = (self.c32 / self.c33).atan();
-            euler.z = (self.c21 / self.c11).atan();
+            euler.i = (self.c32 / self.c33).atan();
+            euler.k = (self.c21 / self.c11).atan();
         } else if self.c31 <= -0.999{
-            euler.z = ((self.c23 - self.c12) / (self.c13 + self.c22)).atan();
+            euler.k = ((self.c23 - self.c12) / (self.c13 + self.c22)).atan();
 
         } else if self.c31 >= 0.999{
-            euler.z =
+            euler.k =
                 PI + ((self.c23 + self.c21) / (self.c13 - self.c22)).atan();
         };
 
@@ -219,9 +219,9 @@ impl Matrix3x3{
 
         // Eq 3.3.2-4, Pg 3-5
         let scew_sym = Matrix3x3::new(
-               0.0, -vec.z,  vec.y,
-             vec.z,    0.0, -vec.x,
-            -vec.y,  vec.x,    0.0,
+               0.0, -vec.k,  vec.j,
+             vec.k,    0.0, -vec.i,
+            -vec.j,  vec.i,    0.0,
         );
 
         // Eq 3.3.2-9, Pg 3-53
@@ -272,9 +272,9 @@ impl Mul<Vector3> for Matrix3x3{
     fn mul(self, vec: Vector3) -> Vector3{
         // 3x3 times a 3x1 matrix
         return Vector3::new(
-            (self.c11 * vec.x) + (self.c12 * vec.y) + (self.c13 * vec.z),
-            (self.c21 * vec.x) + (self.c22 * vec.y) + (self.c23 * vec.z),
-            (self.c31 * vec.x) + (self.c32 * vec.y) + (self.c33 * vec.z)
+            (self.c11 * vec.i) + (self.c12 * vec.j) + (self.c13 * vec.k),
+            (self.c21 * vec.i) + (self.c22 * vec.j) + (self.c23 * vec.k),
+            (self.c31 * vec.i) + (self.c32 * vec.j) + (self.c33 * vec.k)
         )
     }
 }

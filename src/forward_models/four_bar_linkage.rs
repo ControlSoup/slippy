@@ -1,5 +1,4 @@
-use crate::geo;
-use crate::sim;
+use crate::{geo, sim, control};
 
 
 pub struct FourBarLinkage{
@@ -62,15 +61,9 @@ impl FourBarLinkage{
 
     pub fn set_servo_angle_rad(&mut self, input_angle_rad: f64){
 
-        if input_angle_rad >= self.max_input_angle_rad{
-            self.input_angle_rad = self.max_input_angle_rad
-        } else if input_angle_rad <= -self.max_input_angle_rad{
-            self.input_angle_rad = -self.max_input_angle_rad
-        } else{
-            self.input_angle_rad = input_angle_rad
-        };
+        self.input_angle_rad = control::clamp(input_angle_rad, self.max_input_angle_rad, -self.max_input_angle_rad);
 
-        let alpha = geo::PI_THREE_HALFS + input_angle_rad;
+        let alpha = geo::PI_THREE_HALFS + self.input_angle_rad;
 
         // Define new servo vector
         self.a = geo::Line2::from_angle_rad(
@@ -80,7 +73,7 @@ impl FourBarLinkage{
             alpha
         );
 
-        // Calculate the intersection between the circles defind by tvc and linkage
+        // Calculate the intersection between the circles defind by four_bar and linkage
         let c0 = geo::Circle::new(
             self.a.end_x_m,
             self.a.end_y_m,
@@ -92,7 +85,7 @@ impl FourBarLinkage{
         );
 
         let intersect_l_b = match c1.intersect_circle(&c0){
-            None => panic!("Bad: \n b: {:?}\n Angle: {:?}\n a: {:?}\n l: {:?}\n c0: {:?}\n c1:{:?}", self.b, self.input_angle_rad, self.a, self.l, c0, c1),
+            None => panic!("Bad Intersect"),
             Some(vector) => vector
         };
 
@@ -124,6 +117,7 @@ impl FourBarLinkage{
         return geo::Vector2::from_angle_rad(self.b.length_m(), self.output_angle_rad)
     }
 }
+
 // ----------------------------------------------------------------------------
 // Data recording
 // ----------------------------------------------------------------------------
@@ -216,200 +210,197 @@ impl sim::Save for FourBarLinkage{
 mod tests {
     use std::f64::consts::PI;
 
-    use crate::geo::{PI_HALF,PI_QUARTER};
     use crate::sim::Save;
     use super::*;
     use approx::assert_relative_eq;
-    use crate::test::almost_equal_array;
-
     #[test]
     fn sin_sweep(){
         let mut runtime = sim::Runtime::new(PI * 2.0, 1e-2, "angle [rad]");
-        let mut tvc = FourBarLinkage::new_basic(-1.5, 0.5, 1.0, 3.0 * PI);
+        let mut four_bar = FourBarLinkage::new_basic(-1.5, 0.5, 1.0, 3.0 * PI);
 
-        // Ensure TVC axis
+        // Ensure Main axis
         assert_relative_eq!(
-            tvc.b.start_x_m,
+            four_bar.b.start_x_m,
             0.0,
             max_relative=1e-2
         );
         assert_relative_eq!(
-            tvc.b.end_x_m,
+            four_bar.b.end_x_m,
             0.0,
             max_relative=1e-2
         );
         assert_relative_eq!(
-            tvc.b.start_y_m,
+            four_bar.b.start_y_m,
             0.0,
             max_relative=1e-2
         );
         assert_relative_eq!(
-            tvc.b.end_y_m,
+            four_bar.b.end_y_m,
             -2.0,
             max_relative=1e-2
         );
 
-        // Ensure TVC arm is intialized correctly
+        // Ensure arm is intialized correctly
         assert_relative_eq!(
-            tvc.a.start_x_m,
+            four_bar.a.start_x_m,
             1.0,
             max_relative=1e-2
         );
         assert_relative_eq!(
-            tvc.a.end_x_m,
+            four_bar.a.end_x_m,
             1.0,
             max_relative=1e-2
         );
         assert_relative_eq!(
-            tvc.a.start_y_m,
+            four_bar.a.start_y_m,
             -1.5,
             max_relative=1e-2
         );
         assert_relative_eq!(
-            tvc.a.end_y_m,
+            four_bar.a.end_y_m,
             -2.0,
             max_relative=1e-2
         );
 
         // Ensure ground is intialized correctly
         assert_relative_eq!(
-            tvc.g.start_x_m,
+            four_bar.g.start_x_m,
             0.0,
             max_relative=1e-2
         );
         assert_relative_eq!(
-            tvc.g.end_x_m,
+            four_bar.g.end_x_m,
             1.0,
             max_relative=1e-2
         );
         assert_relative_eq!(
-            tvc.g.start_y_m,
+            four_bar.g.start_y_m,
             0.0,
             max_relative=1e-2
         );
         assert_relative_eq!(
-            tvc.g.end_y_m,
+            four_bar.g.end_y_m,
             -1.5,
             max_relative=1e-2
         );
 
-        // Ensure TVC arm is intialized correctly
+        // Ensure linkage is intialized correctly
         assert_relative_eq!(
-            tvc.l.start_x_m,
+            four_bar.l.start_x_m,
             0.0,
             max_relative=1e-2
         );
         assert_relative_eq!(
-            tvc.l.end_x_m,
+            four_bar.l.end_x_m,
             1.0,
             max_relative=1e-2
         );
         assert_relative_eq!(
-            tvc.l.start_y_m,
+            four_bar.l.start_y_m,
             -2.0,
             max_relative=1e-2
         );
         assert_relative_eq!(
-            tvc.l.end_y_m,
+            four_bar.l.end_y_m,
             -2.0,
             max_relative=1e-2
         );
 
         while runtime.is_running{
-        tvc.save_data_verbose("tvc", &mut runtime);
+        four_bar.save_data_verbose("fourbar", &mut runtime);
 
             if runtime.get_x() >= runtime.get_max_x(){
                 break
             }
 
-            tvc.set_servo_angle_rad(runtime.get_x());
+            four_bar.set_servo_angle_rad(runtime.get_x());
             runtime.increment();
         };
 
         assert_relative_eq!(
-            tvc.b.start_x_m,
+            four_bar.b.start_x_m,
             0.0,
             max_relative=1e-2
         );
         assert_relative_eq!(
-            tvc.b.end_x_m,
+            four_bar.b.end_x_m,
             0.0,
             max_relative=1e-2
         );
         assert_relative_eq!(
-            tvc.b.start_y_m,
+            four_bar.b.start_y_m,
             0.0,
             max_relative=1e-2
         );
         assert_relative_eq!(
-            tvc.b.end_y_m,
+            four_bar.b.end_y_m,
             -2.0,
             max_relative=1e-2
         );
 
         assert_relative_eq!(
-            tvc.a.start_x_m,
+            four_bar.a.start_x_m,
             1.0,
             max_relative=1e-2
         );
         assert_relative_eq!(
-            tvc.a.end_x_m,
+            four_bar.a.end_x_m,
             1.0,
             max_relative=1e-2
         );
         assert_relative_eq!(
-            tvc.a.start_y_m,
+            four_bar.a.start_y_m,
             -1.5,
             max_relative=1e-2
         );
         assert_relative_eq!(
-            tvc.a.end_y_m,
+            four_bar.a.end_y_m,
             -2.0,
             max_relative=1e-2
         );
 
         assert_relative_eq!(
-            tvc.g.start_x_m,
+            four_bar.g.start_x_m,
             0.0,
             max_relative=1e-2
         );
         assert_relative_eq!(
-            tvc.g.end_x_m,
+            four_bar.g.end_x_m,
             1.0,
             max_relative=1e-2
         );
         assert_relative_eq!(
-            tvc.g.start_y_m,
+            four_bar.g.start_y_m,
             0.0,
             max_relative=1e-2
         );
         assert_relative_eq!(
-            tvc.g.end_y_m,
+            four_bar.g.end_y_m,
             -1.5,
             max_relative=1e-2
         );
 
         assert_relative_eq!(
-            tvc.l.start_x_m,
+            four_bar.l.start_x_m,
             0.0,
             max_relative=1e-2
         );
         assert_relative_eq!(
-            tvc.l.end_x_m,
+            four_bar.l.end_x_m,
             1.0,
             max_relative=1e-2
         );
         assert_relative_eq!(
-            tvc.l.start_y_m,
+            four_bar.l.start_y_m,
             -2.0,
             max_relative=1e-2
         );
         assert_relative_eq!(
-            tvc.l.end_y_m,
+            four_bar.l.end_y_m,
             -2.0,
             max_relative=1e-2
         );
 
-        runtime.export_to_csv("tvc_sinsweep", "results/data")
+        runtime.export_to_csv("results/data/four_bar.csv")
     }
 }

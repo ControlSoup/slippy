@@ -199,41 +199,41 @@ impl sim::Save for RigidBody{
         // State
         runtime.add_or_set(format!(
             "{node_name}.inertial_pos.x [m]").as_str(),
-            self.inertial_pos_m.x.clone()
+            self.inertial_pos_m.i.clone()
         );
         runtime.add_or_set(format!(
             "{node_name}.inertial_pos.y [m]").as_str(),
-            self.inertial_pos_m.y.clone()
+            self.inertial_pos_m.j.clone()
         );
         runtime.add_or_set(format!(
             "{node_name}.inertial_pos.z [m]").as_str(),
-            self.inertial_pos_m.z.clone()
+            self.inertial_pos_m.k.clone()
         );
 
         runtime.add_or_set(format!(
             "{node_name}.inertial_vel.x [m/s]").as_str(),
-            self.inertial_vel_mps.x
+            self.inertial_vel_mps.i
         );
         runtime.add_or_set(format!(
             "{node_name}.inertial_vel.y [m/s]").as_str(),
-            self.inertial_vel_mps.y
+            self.inertial_vel_mps.j
         );
         runtime.add_or_set(format!(
             "{node_name}.inertial_vel.z [m/s]").as_str(),
-            self.inertial_vel_mps.z
+            self.inertial_vel_mps.k
         );
 
         runtime.add_or_set(format!(
             "{node_name}.inertial_accel.x [m/s^2]").as_str(),
-                self.inertial_accel_mps2.x
+                self.inertial_accel_mps2.i
         );
         runtime.add_or_set(format!(
             "{node_name}.inertial_accel.y [m/s^2]").as_str(),
-                self.inertial_accel_mps2.y
+                self.inertial_accel_mps2.j
         );
         runtime.add_or_set(format!(
             "{node_name}.inertial_accel.z [m/s^2]").as_str(),
-                self.inertial_accel_mps2.z
+                self.inertial_accel_mps2.k
         );
 
         runtime.add_or_set(format!(
@@ -256,81 +256,81 @@ impl sim::Save for RigidBody{
 
         runtime.add_or_set(format!(
             "{node_name}.body_ang_vel.x [rad/s]").as_str(),
-            self.body_ang_vel_radps.x
+            self.body_ang_vel_radps.i
         );
         runtime.add_or_set(format!(
             "{node_name}.body_ang_vel.y [rad/s]").as_str(),
-            self.body_ang_vel_radps.y
+            self.body_ang_vel_radps.j
         );
         runtime.add_or_set(format!(
             "{node_name}.body_ang_vel.z [rad/s]").as_str(),
-            self.body_ang_vel_radps.z
+            self.body_ang_vel_radps.k
         );
 
         runtime.add_or_set(format!(
             "{node_name}.body_ang_accel.x [rad/s^2]").as_str(),
-            self.body_ang_accel_radps2.x
+            self.body_ang_accel_radps2.i
         );
         runtime.add_or_set(format!(
             "{node_name}.body_ang_accel.y [rad/s^2]").as_str(),
-            self.body_ang_accel_radps2.y
+            self.body_ang_accel_radps2.j
         );
         runtime.add_or_set(format!(
             "{node_name}.body_ang_accel.z [rad/s^2]").as_str(),
-            self.body_ang_accel_radps2.z
+            self.body_ang_accel_radps2.k
         );
 
         // Force and Moments
         runtime.add_or_set(format!(
             "{node_name}.intertial_force.x [N]").as_str(),
-            self.intertial_force_n.x
+            self.intertial_force_n.i
         );
         runtime.add_or_set(format!(
             "{node_name}.intertial_force.y [N]").as_str(),
-            self.intertial_force_n.y
+            self.intertial_force_n.j
         );
         runtime.add_or_set(format!(
             "{node_name}.intertial_force.z [N]").as_str(),
-            self.intertial_force_n.z
+            self.intertial_force_n.k
         );
 
         runtime.add_or_set(format!(
             "{node_name}.intertial_moment.x [Nm]").as_str(),
-            self.intertial_moment_nm.x
+            self.intertial_moment_nm.i
         );
         runtime.add_or_set(format!(
             "{node_name}.intertial_moment.y [Nm]").as_str(),
-            self.intertial_moment_nm.y
+            self.intertial_moment_nm.j
         );
         runtime.add_or_set(format!(
             "{node_name}.intertial_moment.z [Nm]").as_str(),
-            self.intertial_moment_nm.z
+            self.intertial_moment_nm.k
         );
 
         runtime.add_or_set(format!(
             "{node_name}.body_force.x [N]").as_str(),
-            self.body_force_n.x
+            self.body_force_n.i
         );
         runtime.add_or_set(format!(
             "{node_name}.body_force.y [N]").as_str(),
-            self.body_force_n.y
+            self.body_force_n.j
         );
         runtime.add_or_set(format!(
             "{node_name}.body_force.z [N]").as_str(),
-            self.body_force_n.z
+            self.body_force_n.k
         );
 
         runtime.add_or_set(format!(
             "{node_name}.body_moment.x [Nm]").as_str(),
-            self.body_moment_nm.x
+            self.body_moment_nm.i
         );
         runtime.add_or_set(format!(
             "{node_name}.body_moment.y [Nm]").as_str(),
-            self.body_moment_nm.y
+            self.body_moment_nm.j
         );
         runtime.add_or_set(format!(
             "{node_name}.body_moment.z [Nm]").as_str(),
-            self.body_moment_nm.z
+            self.body_moment_nm.k
         );
 
         // Mass properties
@@ -422,16 +422,16 @@ impl sim::Save for RigidBody{
         // Attitude conversion
         let euler = dcm.to_euler();
         runtime.add_or_set(format!(
-            "{node_name}.euler.x [rad]").as_str(),
-            euler.x
+            "{node_name}.euler.i [rad]").as_str(),
+            euler.i
         );
         runtime.add_or_set(format!(
-            "{node_name}.euler.y [rad]").as_str(),
-            euler.y
+            "{node_name}.euler.j [rad]").as_str(),
+            euler.j
         );
         runtime.add_or_set(format!(
-            "{node_name}.euler.z [rad]").as_str(),
-            euler.z
+            "{node_name}.euler.k [rad]").as_str(),
+            euler.k
         );
     }
 }
@@ -557,14 +557,14 @@ mod tests {
             runtime.increment();
         }
 
-        runtime.export_to_csv("spin_cone", "results/data");
+        runtime.export_to_csv("results/data/spin_cone.csv");
 
         // Strapdown uses Z-Y-X, I use X-Y-Z
         let end_psi = -omega_c * runtime.get_x();
         let end_theta = (PI / 2.0) - beta;
         let end_phi = (omega_s - (omega_c * beta.cos()))
             * runtime.get_max_x()
-            + init_euler.z;
+            + init_euler.k;
 
         // Eq 11.2.1.1-7
         almost_equal_array(

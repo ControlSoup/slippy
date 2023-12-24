@@ -121,10 +121,10 @@ impl Mul<Vector3> for Quaternion{
     fn mul(self, vec: Vector3) -> Quaternion{
         // Eq 3.2.4-10, Pg 3-41 (Simplifed form)
         return Quaternion::new(
-            (-self.b * vec.x) + (-self.c * vec.y) + (-self.d * vec.z),
-            (self.a * vec.x) + (-self.d * vec.y) + (self.c * vec.z),
-            (self.d * vec.x) + (self.a * vec.y) + (-self.b * vec.z),
-            (-self.c * vec.x) + (self.b * vec.y) + (self.a * vec.z)
+            (-self.b * vec.i) + (-self.c * vec.j) + (-self.d * vec.k),
+            (self.a * vec.i) + (-self.d * vec.j) + (self.c * vec.k),
+            (self.d * vec.i) + (self.a * vec.j) + (-self.b * vec.k),
+            (-self.c * vec.i) + (self.b * vec.j) + (self.a * vec.k)
         )
     }
 }

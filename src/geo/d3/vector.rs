@@ -28,16 +28,16 @@ use super::{quaternion::Quaternion, matrix::Matrix3x3};
     derive_more::Neg
 )]
 pub struct Vector3{
-    pub x: f64,
-    pub y: f64,
-    pub z: f64
+    pub i: f64,
+    pub j: f64,
+    pub k: f64
 }
 
 // Pg 3-1
 impl Vector3{
 
-    pub fn new(x: f64, y: f64, z: f64) -> Vector3{
-        return Vector3 {x,y,z}
+    pub fn new(i: f64, j: f64, k: f64) -> Vector3{
+        return Vector3 {i,j,k}
     }
 
     pub fn of(num: f64) -> Vector3{
@@ -52,7 +52,7 @@ impl Vector3{
         return Vector3::new(array[0], array[1], array[2])
     }
 
-    pub fn from_spherical_coord(
+    pub fn from_spherical(
         norm: f64, 
         angle_alpha_rad: f64, 
         angle_beta_rad: f64
@@ -67,7 +67,7 @@ impl Vector3{
 
     pub fn to_array(self) -> [f64; 3]{
         // Eq: 3.1-10, Pg 3-3
-        return [self.x, self.y, self.z]
+        return [self.i, self.j, self.k]
     }
 
     pub fn to_unit(self) -> Vector3{
@@ -76,25 +76,25 @@ impl Vector3{
 
     pub fn to_dcm(self) -> Matrix3x3{
         // Eq 3.2.3.1-1, Pg 3-33
-        let _c11 = self.y.cos() * self.x.cos();
+        let _c11 = self.j.cos() * self.i.cos();
         let _c12 =
-            (-self.z.cos() * self.x.sin())
-            + (self.z.sin() * self.y.sin() * self.x.cos());
+            (-self.k.cos() * self.i.sin())
+            + (self.k.sin() * self.j.sin() * self.i.cos());
         let _c13 =
-            (self.z.sin() * self.x.sin())
-            + (self.z.cos() * self.y.sin() * self.x.cos());
+            (self.k.sin() * self.i.sin())
+            + (self.k.cos() * self.j.sin() * self.i.cos());
 
-        let _c21 = self.y.cos() * self.x.sin();
+        let _c21 = self.j.cos() * self.i.sin();
         let _c22 =
-            (self.z.cos() * self.x.cos())
-            + (self.z.sin() * self.y.sin() * self.x.sin());
+            (self.k.cos() * self.i.cos())
+            + (self.k.sin() * self.j.sin() * self.i.sin());
         let _c23 =
-            (-self.z.sin() * self.x.cos())
-            + (self.z.cos() * self.y.sin() * self.x.sin());
+            (-self.k.sin() * self.i.cos())
+            + (self.k.cos() * self.j.sin() * self.i.sin());
 
-        let _c31 = -self.y.sin();
-        let _c32 = self.z.sin() * self.y.cos();
-        let _c33 = self.z.cos() * self.y.cos();
+        let _c31 = -self.j.sin();
+        let _c32 = self.k.sin() * self.j.cos();
+        let _c33 = self.k.cos() * self.j.cos();
 
 
         return Matrix3x3::new(
@@ -111,26 +111,26 @@ impl Vector3{
     pub fn quat_form(self) -> Quaternion{
         // Eq 3.2.3.1-3, Pg 3-44
         return Quaternion::new(
-            0.0, self.x, self.y, self.z
+            0.0, self.i, self.j, self.k
         )
     }
 
     pub fn norm(self) -> f64{
         // Eq: 3.1.1-4, Pg 3-8
-        return (self.x.powf(2.0) + self.y.powf(2.0) + self.z.powf(2.0)).sqrt()
+        return (self.i.powf(2.0) + self.j.powf(2.0) + self.k.powf(2.0)).sqrt()
     }
 
     pub fn dot(self, vec: &Vector3) -> f64{
         // Eq 3.1.1-5, Pg 3-8
-        return (self.x * vec.x) + (self.y * vec.y) + (self.z * vec.z)
+        return (self.i * vec.i) + (self.j * vec.j) + (self.k * vec.k)
     }
 
     pub fn cross(self, vec: &Vector3) -> Vector3{
         // Eq 3.1.1-6, Pg 3-8
         return Vector3::new(
-            (self.y * vec.z) - (self.z * vec.y),
-            (self.z * vec.x) - (self.x * vec.z),
-            (self.x * vec.y) - (self.y * vec.x)
+            (self.j * vec.k) - (self.k * vec.j),
+            (self.k * vec.i) - (self.i * vec.k),
+            (self.i * vec.j) - (self.j * vec.i)
         )
     }
 

@@ -277,11 +277,11 @@ impl Circle{
         return self.radius_m * 2.0
     }
 
-    pub fn area(&self) -> f64{
+    pub fn area_m2(&self) -> f64{
         return self.radius_m.powf(2.0) * PI 
     }
 
-    pub fn circumference(&self) -> f64{
+    pub fn circumference_m(&self) -> f64{
         return PI_DOUBLE * self.radius_m
     }
 

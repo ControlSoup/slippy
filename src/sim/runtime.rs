@@ -74,7 +74,7 @@ impl Runtime{
 
     pub fn increment(&mut self){
 
-        if self.current_index <= (self.x_array.len() - 1){
+        if self.current_index < (self.x_array.len() - 1){
             self.current_index += 1;
 
             // Store the current value
@@ -138,9 +138,8 @@ impl Runtime{
         self.data_dict = new_hashmap;
     }
 
-    pub fn export_to_csv(&mut self, file_name: &str, file_path: &str){
-        let file_name: String = file_name.to_string() + ".csv";
-        let path = Path::new(file_path).join(file_name);
+    pub fn export_to_csv(&mut self, file_path: &str){
+        let path = Path::new(file_path);
 
         // Attempt to write to this path and overwrite
         let mut writer = match csv::Writer::from_path(&path){
