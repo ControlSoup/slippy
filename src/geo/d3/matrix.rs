@@ -232,6 +232,27 @@ impl Matrix3x3{
         return target - self
     }
 
+    pub fn from_xyz_euler(x: f64, y: f64, z: f64) -> Matrix3x3{
+        // Source:
+        // https://en.wikipedia.org/wiki/Euler_angles#Angles_of_a_given_frame
+        let _c11 = y.cos() * z.cos();
+        let _c12 = -y.cos() * z.sin(); 
+        let _c13 = y.sin();
+
+        let _c21 = (x.cos() * z.sin()) + (z.cos() * x.sin() * y.sin());
+        let _c22 = (x.cos() * z.cos()) - (x.sin() * y.sin() * z.sin()); 
+        let _c23 = -y.cos() * x.sin();
+
+        let _c31 = (x.sin() * z.sin()) - (x.cos() * z.cos() * y.sin());
+        let _c32 = (z.cos() * x.sin()) + (x.cos() * y.sin() * z.sin());
+        let _c33 = x.cos() * y.cos();
+
+        return Matrix3x3::new(
+            _c11, _c12, _c13,
+            _c21, _c22, _c23,
+            _c31, _c32, _c33,
+        )
+    }
 
 }
 

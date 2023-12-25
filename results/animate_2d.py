@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-import pandas as pd
 
 from file_handling import csv_to_datadict
 
@@ -12,12 +11,11 @@ class Line2d():
         start_m: np.array, 
         end_m: np.array,
         name: str = " ",
-        color: str = " $$$UNIQUE$$" 
+        color: str = "black" 
     ) -> None:
         self.start_m = start_m.copy()
         self.end_m = end_m.copy()
         self.name = name
-
         self.color = color
 
 

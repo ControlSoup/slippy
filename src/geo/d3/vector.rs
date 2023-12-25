@@ -5,7 +5,7 @@
 // 3rd Party
 use derive_more;
 
-use crate::geo::Vector2;
+use crate::geo::{Vector2, self};
 
 use super::{quaternion::Quaternion, matrix::Matrix3x3};
 
@@ -53,15 +53,16 @@ impl Vector3{
     }
 
     pub fn from_spherical(
-        norm: f64, 
-        angle_alpha_rad: f64, 
-        angle_beta_rad: f64
+        r: f64, 
+        theta: f64, 
+        phi: f64
     ) -> Vector3{
+        // Alternative spherical coordinates based on x and y axis
         // Source: https://en.wikipedia.org/wiki/Spherical_coordinate_system
         return Vector3::new(
-            norm * angle_alpha_rad.cos() * angle_beta_rad.cos(),
-            norm * angle_alpha_rad.sin() * angle_beta_rad.sin(),
-            norm * angle_alpha_rad.cos()
+            r * theta.sin() * phi.cos(),
+            r * theta.sin() * phi.sin(),
+            r * theta.cos(),
         )
     }
 
@@ -201,5 +202,16 @@ mod tests {
             &euler.to_quat().to_array(),
             &quat.to_array()
         );
+    }
+
+    #[test]
+    fn from_spherical(){
+        // Identity check
+        let vector3 = Vector3::from_spherical(1.0, 0.0, 0.0);
+
+        almost_equal_array(
+            &vector3.to_array(),
+            &[0.0, 0.0, 1.0]
+        )
     }
 }

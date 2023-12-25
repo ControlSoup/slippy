@@ -114,11 +114,11 @@ impl RigidBody{
         }
     }
 
-    pub fn get_pos_m(&self) -> geo::Vector3{
+    pub fn get_intertial_pos_m(&self) -> geo::Vector3{
         return self.inertial_pos_m
     }
 
-    pub fn get_vel_mps(&self) -> geo::Vector3{
+    pub fn get_intertial_vel_mps(&self) -> geo::Vector3{
         return self.inertial_vel_mps
     }
 

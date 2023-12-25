@@ -5,53 +5,58 @@ pub struct BasicTVC{
     thrust_vec_n: geo::Vector3,
     moment_vec_nm: geo::Vector3,
     thrust_n: f64,
-    angle_1_rad: f64,
-    angle_2_rad: f64,
-    max_angle_rad: f64
+    theta_rad: f64,
+    phi_rad: f64,
+    max_angle_rad: f64,
+    max_thrust_n: f64
 }
 
 impl BasicTVC{
     pub fn new(
         thrust_n: f64, 
         pos_joint_m: [f64; 3], 
-        angle_1_rad: f64, 
-        angle_2_rad: f64, 
-        max_angle_rad: f64
+        theta_rad: f64, 
+        phi_rad: f64, 
+        max_angle_rad: f64,
+        max_thrust_n: f64
     ) -> BasicTVC{
         let pos_joint_m = geo::Vector3::from_array(pos_joint_m);
-        let thrust_vec_n = geo::Vector3::from_spherical(
-            1.0, 
-            angle_1_rad, 
-            angle_2_rad
-        );
+
+        let xyz_axis = geo::Matrix3x3::from_xyz_euler(phi_rad, -theta_rad, 0.0);
+        let thrust_vec_n = geo::Vector3::new(xyz_axis.c31, xyz_axis.c32, xyz_axis.c33) * thrust_n;
+
         let moment_vec_nm = pos_joint_m.cross(&thrust_vec_n);
         return BasicTVC{
             pos_joint_m,
             thrust_vec_n,
             moment_vec_nm,
             thrust_n,
-            angle_1_rad,
-            angle_2_rad,
-            max_angle_rad
+            theta_rad,
+            phi_rad,
+            max_angle_rad,
+            max_thrust_n
         }
     }
 
-    pub fn set_angle_1_rad(&mut self, angle_1_rad: f64){
-        self.angle_1_rad = control::clamp(angle_1_rad, self.max_angle_rad, -self.max_angle_rad);
-        self.thrust_vec_n = geo::Vector3::from_spherical(self.thrust_n, self.angle_1_rad, self.angle_2_rad);
+    fn update_params(&mut self){
+        let xyz_axis = geo::Matrix3x3::from_xyz_euler(self.phi_rad, -self.theta_rad, 0.0);
+        self.thrust_vec_n = geo::Vector3::new(xyz_axis.c31, xyz_axis.c32, xyz_axis.c33) * self.thrust_n;
         self.moment_vec_nm = self.pos_joint_m.cross(&self.thrust_vec_n);
     }
 
-    pub fn set_angle_2_rad(&mut self, angle_2_rad: f64){
-        self.angle_2_rad = control::clamp(angle_2_rad, self.max_angle_rad, -self.max_angle_rad);
-        self.thrust_vec_n = geo::Vector3::from_spherical(self.thrust_n, self.angle_1_rad, self.angle_2_rad);
-        self.moment_vec_nm = self.pos_joint_m.cross(&self.thrust_vec_n);
+    pub fn set_theta_rad(&mut self, theta_rad: f64){
+        self.theta_rad = control::clamp(theta_rad, self.max_angle_rad, -self.max_angle_rad);
+        self.update_params();
+    }
+
+    pub fn set_phi_rad(&mut self, phi_rad: f64){
+        self.phi_rad = control::clamp(phi_rad, self.max_angle_rad, -self.max_angle_rad);
+        self.update_params();
     }
 
     pub fn set_thrust_n(&mut self, thrust_n: f64){
-        self.thrust_n = thrust_n;
-        self.thrust_vec_n = self.thrust_vec_n.to_unit() * self.thrust_n;
-        self.moment_vec_nm = self.pos_joint_m.cross(&self.thrust_vec_n);
+        self.thrust_n = control::clamp(thrust_n, self.max_thrust_n, 0.0);
+        self.update_params();
     }
 
     pub fn get_thrust_vec_n(&self) -> geo::Vector3{
@@ -70,13 +75,13 @@ impl BasicTVC{
 impl sim::Save for BasicTVC{
     fn save_data(&self, node_name: &str, runtime: &mut sim::Runtime) where Self: Sized {
         runtime.add_or_set(format!(
-            "{node_name}.angle_1 [rad]").as_str(),self.angle_1_rad
+            "{node_name}.theta [rad]").as_str(),self.theta_rad
         );
         runtime.add_or_set(format!(
-            "{node_name}.angle_2 [rad]").as_str(),self.angle_2_rad
+            "{node_name}.phi [rad]").as_str(),self.phi_rad
         );
         runtime.add_or_set(format!(
-            "{node_name}.total_thrust [N]").as_str(),self.thrust_vec_n.k,
+            "{node_name}.total_thrust [N]").as_str(),self.thrust_n
         );
     }
 
@@ -123,13 +128,50 @@ impl sim::Save for BasicTVC{
 mod tests {
     use std::f64::consts::PI;
 
+    use crate::geo::PI_QUARTER;
     use crate::sim::Save;
-    use super::*;
+    use crate::test::almost_equal_array;
     use approx::assert_relative_eq;
+    use super::*;
+
+    #[test]
+    fn forty_five(){
+        let mut tvc = BasicTVC::new(1.0, [0.0, 0.0, 0.0], PI_QUARTER, 0.0, 5.0, 1.0);
+
+        tvc.set_thrust_n(10.0);
+        tvc.set_theta_rad(PI_QUARTER);
+
+        assert_relative_eq!(
+            tvc.get_thrust_vec_n().i,
+            2_f64.sqrt() / 2.0        
+        );
+
+        tvc.set_theta_rad(0.0);
+        assert_relative_eq!(
+            tvc.get_thrust_vec_n().i,
+            0.0
+        );
+
+        tvc.set_phi_rad(PI_QUARTER);
+
+        assert_relative_eq!(
+            tvc.get_thrust_vec_n().j,
+            2_f64.sqrt() / 2.0        
+        );
+
+        tvc.set_phi_rad(0.0);
+        assert_relative_eq!(
+            tvc.get_thrust_vec_n().j,
+            0.0
+        );
+
+
+    }
+
     #[test]
     fn sin_sweep(){
-        let mut runtime = sim::Runtime::new(PI * 2.0, 1e-2, "angle [rad]");
-        let mut tvc = BasicTVC::new(1.0, [0.0,0.0,0.0], 0.0, 0.0, 2.0*PI);
+        let mut runtime = sim::Runtime::new(PI * 2.0 + 1e-2, 1e-2, "angle [rad]");
+        let mut tvc = BasicTVC::new(1.0, [0.0,0.0,-1.0], 0.0, 0.0, 2.0*PI, 1.0);
 
         while runtime.is_running{
             tvc.save_data_verbose("tvc", &mut runtime);
@@ -138,10 +180,22 @@ mod tests {
                 break
             }
 
-            tvc.set_angle_1_rad(runtime.get_x());
+            tvc.set_thrust_n(10.0);
+            tvc.set_theta_rad(runtime.get_x());
+            tvc.set_phi_rad(runtime.get_x());
             runtime.increment();
         }
 
-        runtime.export_to_csv("results/data/tvc_sinsweep.csv")
+        runtime.export_to_csv("results/data/tvc_sinsweep.csv");
+
+        almost_equal_array(
+            &[-0.0, -0.0, 1.0],
+            &tvc.get_thrust_vec_n().to_array(),
+        );
+        almost_equal_array(
+            &tvc.get_moment_vec_nm().to_array(),
+            &[0.0, 0.0, 0.0]
+        );
+
     }
 }
